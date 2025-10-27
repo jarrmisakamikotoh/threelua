@@ -1,798 +1,274 @@
--- Delta Combat Multiplier - SAFE VERSION (No Hooks)
--- Maximum performance without hookmetamethod
+-- Combat Power Booster Script for Delta Executor
+-- Meningkatkan Combat Power hingga ratusan triliun
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local player = Players.LocalPlayer
-local playerGui = player:WaitForChild("PlayerGui")
+local Player = Players.LocalPlayer
 
--- Configuration
-local Config = {
-    TrainMultiplier = 500000000,   -- 500 MILLION! (5x lebih tinggi)
-    SpeedMultiplier = 1000000,     -- 1 MILLION speed! (2x lebih tinggi)
-    ThreadCount = 150,             -- 150 threads! (50% lebih banyak)
-    AutoBuffs = true,
-    BuffInterval = 5,              -- 5 detik! (2x lebih cepat)
-    Enabled = false,
-    AutoTrain = false,
-    InstantMode = true,
-    BoostMultiplier = 10           -- NEW: Extra boost multiplier
-}
-
-local Stats = {
-    TrainCount = 0,
-    TrainsPerSecond = 0,
-    LastCombatPower = 0,
-    BuffsApplied = 0,
-    StartTime = tick(),
-    ThreadsActive = 0
-}
-
--- Cache
-local Cache = {}
-
--- Buff Items
-local BuffItems = {
-    {Id = 18, Name = "Arms"},
-    {Id = 19, Name = "Back"},
-    {Id = 20, Name = "Legs"},
-    {Id = 21, Name = "Agility"}
-}
-
--- GUI
+-- GUI Setup
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "DeltaSafe"
-ScreenGui.ResetOnSpawn = false
-ScreenGui.Parent = playerGui
-
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 500, 0, 650)
-MainFrame.Position = UDim2.new(0.5, -250, 0.5, -325)
-MainFrame.BackgroundColor3 = Color3.fromRGB(5, 5, 10)
-MainFrame.BorderSizePixel = 0
+local Title = Instance.new("TextLabel")
+local CloseButton = Instance.new("TextButton")
+local MinimizeButton = Instance.new("TextButton")
+local ArmsButton = Instance.new("TextButton")
+local LegsButton = Instance.new("TextButton")
+local BackButton = Instance.new("TextButton")
+local AgilityButton = Instance.new("TextButton")
+local AutoTrainButton = Instance.new("TextButton")
+local MultiplierLabel = Instance.new("TextLabel")
+local MultiplierInput = Instance.new("TextBox")
+local StatusLabel = Instance.new("TextLabel")
+
+-- Variables
+local isMinimized = false
+local isAutoTraining = false
+local multiplier = 1000000000000 -- 1 Triliun sebagai default
+
+-- GUI Properties
+ScreenGui.Name = "CombatPowerBoosterGUI"
+ScreenGui.Parent = game.CoreGui
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+MainFrame.BorderSizePixel = 2
+MainFrame.BorderColor3 = Color3.fromRGB(0, 170, 255)
+MainFrame.Position = UDim2.new(0.35, 0, 0.25, 0)
+MainFrame.Size = UDim2.new(0, 350, 0, 400)
 MainFrame.Active = true
 MainFrame.Draggable = true
-MainFrame.Parent = ScreenGui
 
-local Corner = Instance.new("UICorner")
-Corner.CornerRadius = UDim.new(0, 16)
-Corner.Parent = MainFrame
+Title.Name = "Title"
+Title.Parent = MainFrame
+Title.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+Title.Size = UDim2.new(1, 0, 0, 35)
+Title.Font = Enum.Font.GothamBold
+Title.Text = "Combat Power Booster"
+Title.TextColor3 = Color3.fromRGB(0, 170, 255)
+Title.TextSize = 16
 
-local Stroke = Instance.new("UIStroke")
-Stroke.Color = Color3.fromRGB(0, 255, 100)
-Stroke.Thickness = 4
-Stroke.Parent = MainFrame
+CloseButton.Name = "CloseButton"
+CloseButton.Parent = MainFrame
+CloseButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+CloseButton.Position = UDim2.new(1, -30, 0, 5)
+CloseButton.Size = UDim2.new(0, 25, 0, 25)
+CloseButton.Font = Enum.Font.GothamBold
+CloseButton.Text = "X"
+CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseButton.TextSize = 14
 
--- Header
-local Header = Instance.new("Frame")
-Header.Size = UDim2.new(1, 0, 0, 65)
-Header.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-Header.BorderSizePixel = 0
-Header.Parent = MainFrame
+MinimizeButton.Name = "MinimizeButton"
+MinimizeButton.Parent = MainFrame
+MinimizeButton.BackgroundColor3 = Color3.fromRGB(255, 170, 0)
+MinimizeButton.Position = UDim2.new(1, -60, 0, 5)
+MinimizeButton.Size = UDim2.new(0, 25, 0, 25)
+MinimizeButton.Font = Enum.Font.GothamBold
+MinimizeButton.Text = "-"
+MinimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+MinimizeButton.TextSize = 18
 
-local HCorner = Instance.new("UICorner")
-HCorner.CornerRadius = UDim.new(0, 16)
-HCorner.Parent = Header
+MultiplierLabel.Name = "MultiplierLabel"
+MultiplierLabel.Parent = MainFrame
+MultiplierLabel.BackgroundTransparency = 1
+MultiplierLabel.Position = UDim2.new(0, 10, 0, 45)
+MultiplierLabel.Size = UDim2.new(1, -20, 0, 25)
+MultiplierLabel.Font = Enum.Font.Gotham
+MultiplierLabel.Text = "Multiplier (nilai hasil training):"
+MultiplierLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+MultiplierLabel.TextSize = 12
+MultiplierLabel.TextXAlignment = Enum.TextXAlignment.Left
 
-local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, -100, 1, 0)
-Title.Position = UDim2.new(0, 15, 0, 0)
-Title.BackgroundTransparency = 1
-Title.Text = "⚡ DELTA SAFE MODE"
-Title.TextColor3 = Color3.fromRGB(0, 255, 100)
-Title.TextSize = 22
-Title.Font = Enum.Font.GothamBlack
-Title.TextXAlignment = Enum.TextXAlignment.Left
-Title.Parent = Header
+MultiplierInput.Name = "MultiplierInput"
+MultiplierInput.Parent = MainFrame
+MultiplierInput.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+MultiplierInput.BorderColor3 = Color3.fromRGB(0, 170, 255)
+MultiplierInput.Position = UDim2.new(0, 10, 0, 75)
+MultiplierInput.Size = UDim2.new(1, -20, 0, 35)
+MultiplierInput.Font = Enum.Font.Gotham
+MultiplierInput.PlaceholderText = "Masukkan multiplier (contoh: 1000000000000)"
+MultiplierInput.Text = "1000000000000"
+MultiplierInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+MultiplierInput.TextSize = 12
 
-local MinBtn = Instance.new("TextButton")
-MinBtn.Size = UDim2.new(0, 40, 0, 40)
-MinBtn.Position = UDim2.new(1, -92, 0, 13)
-MinBtn.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
-MinBtn.Text = "−"
-MinBtn.TextSize = 30
-MinBtn.Font = Enum.Font.GothamBlack
-MinBtn.BorderSizePixel = 0
-MinBtn.Parent = Header
+ArmsButton.Name = "ArmsButton"
+ArmsButton.Parent = MainFrame
+ArmsButton.BackgroundColor3 = Color3.fromRGB(255, 100, 100)
+ArmsButton.Position = UDim2.new(0, 10, 0, 120)
+ArmsButton.Size = UDim2.new(0.48, -10, 0, 40)
+ArmsButton.Font = Enum.Font.GothamBold
+ArmsButton.Text = "Boost Arms"
+ArmsButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ArmsButton.TextSize = 14
 
-local MCorner = Instance.new("UICorner")
-MCorner.CornerRadius = UDim.new(0, 10)
-MCorner.Parent = MinBtn
+LegsButton.Name = "LegsButton"
+LegsButton.Parent = MainFrame
+LegsButton.BackgroundColor3 = Color3.fromRGB(100, 255, 100)
+LegsButton.Position = UDim2.new(0.52, 0, 0, 120)
+LegsButton.Size = UDim2.new(0.48, -10, 0, 40)
+LegsButton.Font = Enum.Font.GothamBold
+LegsButton.Text = "Boost Legs"
+LegsButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+LegsButton.TextSize = 14
 
-local CloseBtn = Instance.new("TextButton")
-CloseBtn.Size = UDim2.new(0, 40, 0, 40)
-CloseBtn.Position = UDim2.new(1, -48, 0, 13)
-CloseBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-CloseBtn.Text = "✕"
-CloseBtn.TextSize = 22
-CloseBtn.Font = Enum.Font.GothamBlack
-CloseBtn.BorderSizePixel = 0
-CloseBtn.Parent = Header
+BackButton.Name = "BackButton"
+BackButton.Parent = MainFrame
+BackButton.BackgroundColor3 = Color3.fromRGB(100, 100, 255)
+BackButton.Position = UDim2.new(0, 10, 0, 170)
+BackButton.Size = UDim2.new(0.48, -10, 0, 40)
+BackButton.Font = Enum.Font.GothamBold
+BackButton.Text = "Boost Back"
+BackButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+BackButton.TextSize = 14
 
-local CCorner = Instance.new("UICorner")
-CCorner.CornerRadius = UDim.new(0, 10)
-CCorner.Parent = CloseBtn
+AgilityButton.Name = "AgilityButton"
+AgilityButton.Parent = MainFrame
+AgilityButton.BackgroundColor3 = Color3.fromRGB(255, 255, 100)
+AgilityButton.Position = UDim2.new(0.52, 0, 0, 170)
+AgilityButton.Size = UDim2.new(0.48, -10, 0, 40)
+AgilityButton.Font = Enum.Font.GothamBold
+AgilityButton.Text = "Boost Agility"
+AgilityButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+AgilityButton.TextSize = 14
 
--- Content
-local Content = Instance.new("Frame")
-Content.Size = UDim2.new(1, -30, 1, -80)
-Content.Position = UDim2.new(0, 15, 0, 73)
-Content.BackgroundTransparency = 1
-Content.Parent = MainFrame
+AutoTrainButton.Name = "AutoTrainButton"
+AutoTrainButton.Parent = MainFrame
+AutoTrainButton.BackgroundColor3 = Color3.fromRGB(100, 200, 255)
+AutoTrainButton.Position = UDim2.new(0, 10, 0, 220)
+AutoTrainButton.Size = UDim2.new(1, -20, 0, 50)
+AutoTrainButton.Font = Enum.Font.GothamBold
+AutoTrainButton.Text = "Start Auto Train All"
+AutoTrainButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+AutoTrainButton.TextSize = 16
 
--- Stats
-local StatsFrame = Instance.new("Frame")
-StatsFrame.Size = UDim2.new(1, 0, 0, 200)
-StatsFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
-StatsFrame.BorderSizePixel = 0
-StatsFrame.Parent = Content
+StatusLabel.Name = "StatusLabel"
+StatusLabel.Parent = MainFrame
+StatusLabel.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+StatusLabel.Position = UDim2.new(0, 10, 0, 280)
+StatusLabel.Size = UDim2.new(1, -20, 0, 110)
+StatusLabel.Font = Enum.Font.Gotham
+StatusLabel.Text = "Status: Ready\n\nKlik button untuk boost element!"
+StatusLabel.TextColor3 = Color3.fromRGB(0, 255, 100)
+StatusLabel.TextSize = 11
+StatusLabel.TextYAlignment = Enum.TextYAlignment.Top
+StatusLabel.TextWrapped = true
 
-local SCorner = Instance.new("UICorner")
-SCorner.CornerRadius = UDim.new(0, 12)
-SCorner.Parent = StatsFrame
-
-local StatsTitle = Instance.new("TextLabel")
-StatsTitle.Size = UDim2.new(1, -20, 0, 28)
-StatsTitle.Position = UDim2.new(0, 10, 0, 5)
-StatsTitle.BackgroundTransparency = 1
-StatsTitle.Text = "📊 PERFORMANCE"
-StatsTitle.TextColor3 = Color3.fromRGB(0, 255, 200)
-StatsTitle.TextSize = 17
-StatsTitle.Font = Enum.Font.GothamBlack
-StatsTitle.TextXAlignment = Enum.TextXAlignment.Left
-StatsTitle.Parent = StatsFrame
-
-local StatusLbl = Instance.new("TextLabel")
-StatusLbl.Size = UDim2.new(1, -20, 0, 24)
-StatusLbl.Position = UDim2.new(0, 10, 0, 36)
-StatusLbl.BackgroundTransparency = 1
-StatusLbl.Text = "⚪ STANDBY"
-StatusLbl.TextColor3 = Color3.fromRGB(200, 200, 255)
-StatusLbl.TextSize = 15
-StatusLbl.Font = Enum.Font.GothamBold
-StatusLbl.TextXAlignment = Enum.TextXAlignment.Left
-StatusLbl.Parent = StatsFrame
-
-local function CreateStatLabel(text, yPos)
-    local lbl = Instance.new("TextLabel")
-    lbl.Size = UDim2.new(1, -20, 0, 22)
-    lbl.Position = UDim2.new(0, 10, 0, yPos)
-    lbl.BackgroundTransparency = 1
-    lbl.Text = text
-    lbl.TextColor3 = Color3.fromRGB(255, 255, 150)
-    lbl.TextSize = 14
-    lbl.Font = Enum.Font.Gotham
-    lbl.TextXAlignment = Enum.TextXAlignment.Left
-    lbl.Parent = StatsFrame
-    return lbl
+-- Functions
+local function UpdateStatus(message)
+    StatusLabel.Text = "Status: " .. message
 end
 
-local TPSLbl = CreateStatLabel("⚡ Speed: 0/sec", 64)
-local TrainLbl = CreateStatLabel("🎯 Trains: 0", 90)
-local CPLbl = CreateStatLabel("💎 CP: 0", 116)
-local BuffLbl = CreateStatLabel("🌟 Buffs: 0", 142)
-local ThreadLbl = CreateStatLabel("🔥 Threads: 0/100", 168)
-
--- Multiplier
-local MultFrame = Instance.new("Frame")
-MultFrame.Size = UDim2.new(1, 0, 0, 100)
-MultFrame.Position = UDim2.new(0, 0, 0, 210)
-MultFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
-MultFrame.BorderSizePixel = 0
-MultFrame.Parent = Content
-
-local MultCorner = Instance.new("UICorner")
-MultCorner.CornerRadius = UDim.new(0, 12)
-MultCorner.Parent = MultFrame
-
-local MultTitle = Instance.new("TextLabel")
-MultTitle.Size = UDim2.new(1, -20, 0, 26)
-MultTitle.Position = UDim2.new(0, 10, 0, 5)
-MultTitle.BackgroundTransparency = 1
-MultTitle.Text = "🔥 MULTIPLIER: x100M"
-MultTitle.TextColor3 = Color3.fromRGB(255, 255, 0)
-MultTitle.TextSize = 16
-MultTitle.Font = Enum.Font.GothamBlack
-MultTitle.TextXAlignment = Enum.TextXAlignment.Left
-MultTitle.Parent = MultFrame
-
-local MultInput = Instance.new("TextBox")
-MultInput.Size = UDim2.new(1, -20, 0, 55)
-MultInput.Position = UDim2.new(0, 10, 0, 35)
-MultInput.BackgroundColor3 = Color3.fromRGB(5, 5, 10)
-MultInput.BorderSizePixel = 0
-MultInput.Text = "500000000"
-MultInput.PlaceholderText = "Recommended: 500M-1B"
-MultInput.TextColor3 = Color3.fromRGB(255, 255, 0)
-MultInput.TextSize = 26
-MultInput.Font = Enum.Font.GothamBlack
-MultInput.Parent = MultFrame
-
-local MICorner = Instance.new("UICorner")
-MICorner.CornerRadius = UDim.new(0, 10)
-MICorner.Parent = MultInput
-
--- Threads
-local ThreadFrame = Instance.new("Frame")
-ThreadFrame.Size = UDim2.new(1, 0, 0, 100)
-ThreadFrame.Position = UDim2.new(0, 0, 0, 320)
-ThreadFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
-ThreadFrame.BorderSizePixel = 0
-ThreadFrame.Parent = Content
-
-local ThreadCorner = Instance.new("UICorner")
-ThreadCorner.CornerRadius = UDim.new(0, 12)
-ThreadCorner.Parent = ThreadFrame
-
-local ThreadTitle = Instance.new("TextLabel")
-ThreadTitle.Size = UDim2.new(1, -20, 0, 26)
-ThreadTitle.Position = UDim2.new(0, 10, 0, 5)
-ThreadTitle.BackgroundTransparency = 1
-ThreadTitle.Text = "🔥 THREADS: 100"
-ThreadTitle.TextColor3 = Color3.fromRGB(0, 255, 255)
-ThreadTitle.TextSize = 16
-ThreadTitle.Font = Enum.Font.GothamBlack
-ThreadTitle.TextXAlignment = Enum.TextXAlignment.Left
-ThreadTitle.Parent = ThreadFrame
-
-local ThreadInput = Instance.new("TextBox")
-ThreadInput.Size = UDim2.new(1, -20, 0, 55)
-ThreadInput.Position = UDim2.new(0, 10, 0, 35)
-ThreadInput.BackgroundColor3 = Color3.fromRGB(5, 5, 10)
-ThreadInput.BorderSizePixel = 0
-ThreadInput.Text = "150"
-ThreadInput.PlaceholderText = "Recommended: 150-200"
-ThreadInput.TextColor3 = Color3.fromRGB(0, 255, 255)
-ThreadInput.TextSize = 26
-ThreadInput.Font = Enum.Font.GothamBlack
-ThreadInput.Parent = ThreadFrame
-
-local TICorner = Instance.new("UICorner")
-TICorner.CornerRadius = UDim.new(0, 10)
-TICorner.Parent = ThreadInput
-
--- Buff info
-local BuffInfo = Instance.new("TextLabel")
-BuffInfo.Size = UDim2.new(1, 0, 0, 60)
-BuffInfo.Position = UDim2.new(0, 0, 0, 430)
-BuffInfo.BackgroundColor3 = Color3.fromRGB(20, 15, 30)
-BuffInfo.BorderSizePixel = 0
-BuffInfo.Text = "💪18-Arms | 🔨19-Back | 🦵20-Legs | ⚡21-Agility\nAuto-use every 5 seconds (FASTER!)"
-BuffInfo.TextColor3 = Color3.fromRGB(200, 255, 200)
-BuffInfo.TextSize = 13
-BuffInfo.Font = Enum.Font.Gotham
-BuffInfo.TextWrapped = true
-BuffInfo.Parent = Content
-
-local BICorner = Instance.new("UICorner")
-BICorner.CornerRadius = UDim.new(0, 12)
-BICorner.Parent = BuffInfo
-
--- Buff Toggle
-local BuffToggle = Instance.new("TextButton")
-BuffToggle.Size = UDim2.new(1, 0, 0, 50)
-BuffToggle.Position = UDim2.new(0, 0, 0, 500)
-BuffToggle.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
-BuffToggle.Text = "🌟 AUTO BUFFS: ON"
-BuffToggle.TextSize = 18
-BuffToggle.Font = Enum.Font.GothamBlack
-BuffToggle.BorderSizePixel = 0
-BuffToggle.Parent = Content
-
-local BuffCorner = Instance.new("UICorner")
-BuffCorner.CornerRadius = UDim.new(0, 12)
-BuffCorner.Parent = BuffToggle
-
--- Activate
-local ActivateBtn = Instance.new("TextButton")
-ActivateBtn.Size = UDim2.new(1, 0, 0, 58)
-ActivateBtn.Position = UDim2.new(0, 0, 0, 560)
-ActivateBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 100)
-ActivateBtn.Text = "🚀 ACTIVATE"
-ActivateBtn.TextSize = 22
-ActivateBtn.Font = Enum.Font.GothamBlack
-ActivateBtn.BorderSizePixel = 0
-ActivateBtn.Parent = Content
-
-local ActCorner = Instance.new("UICorner")
-ActCorner.CornerRadius = UDim.new(0, 12)
-ActCorner.Parent = ActivateBtn
-
-local ActStroke = Instance.new("UIStroke")
-ActStroke.Color = Color3.fromRGB(0, 255, 150)
-ActStroke.Thickness = 4
-ActStroke.Parent = ActivateBtn
-
--- Minimized
-local MinFrame = Instance.new("Frame")
-MinFrame.Size = UDim2.new(0, 320, 0, 60)
-MinFrame.Position = UDim2.new(0.5, -160, 0, 20)
-MinFrame.BackgroundColor3 = Color3.fromRGB(5, 5, 10)
-MinFrame.BorderSizePixel = 0
-MinFrame.Visible = false
-MinFrame.Active = true
-MinFrame.Draggable = true
-MinFrame.Parent = ScreenGui
-
-local MFCorner = Instance.new("UICorner")
-MFCorner.CornerRadius = UDim.new(0, 14)
-MFCorner.Parent = MinFrame
-
-local MFStroke = Instance.new("UIStroke")
-MFStroke.Color = Color3.fromRGB(0, 255, 100)
-MFStroke.Thickness = 3
-MFStroke.Parent = MinFrame
-
-local MinLabel = Instance.new("TextLabel")
-MinLabel.Size = UDim2.new(1, -70, 1, 0)
-MinLabel.Position = UDim2.new(0, 15, 0, 0)
-MinLabel.BackgroundTransparency = 1
-MinLabel.Text = "⚡ DELTA"
-MinLabel.TextColor3 = Color3.fromRGB(0, 255, 100)
-MinLabel.TextSize = 18
-MinLabel.Font = Enum.Font.GothamBlack
-MinLabel.TextXAlignment = Enum.TextXAlignment.Left
-MinLabel.Parent = MinFrame
-
-local MinStatusLbl = Instance.new("TextLabel")
-MinStatusLbl.Size = UDim2.new(0, 60, 1, 0)
-MinStatusLbl.Position = UDim2.new(1, -115, 0, 0)
-MinStatusLbl.BackgroundTransparency = 1
-MinStatusLbl.Text = "⚪ OFF"
-MinStatusLbl.TextColor3 = Color3.fromRGB(255, 100, 100)
-MinStatusLbl.TextSize = 14
-MinStatusLbl.Font = Enum.Font.GothamBold
-MinStatusLbl.Parent = MinFrame
-
-local RestoreBtn = Instance.new("TextButton")
-RestoreBtn.Size = UDim2.new(0, 48, 0, 48)
-RestoreBtn.Position = UDim2.new(1, -54, 0, 6)
-RestoreBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
-RestoreBtn.Text = "□"
-RestoreBtn.TextSize = 22
-RestoreBtn.Font = Enum.Font.GothamBlack
-RestoreBtn.BorderSizePixel = 0
-RestoreBtn.Parent = MinFrame
-
-local RCorner = Instance.new("UICorner")
-RCorner.CornerRadius = UDim.new(0, 10)
-RCorner.Parent = RestoreBtn
-
--- Format
-local function FormatNumber(num)
-    if num >= 1e24 then return string.format("%.2fSp", num / 1e24)
-    elseif num >= 1e21 then return string.format("%.2fSx", num / 1e21)
-    elseif num >= 1e18 then return string.format("%.2fQu", num / 1e18)
-    elseif num >= 1e15 then return string.format("%.2fQd", num / 1e15)
-    elseif num >= 1e12 then return string.format("%.2fT", num / 1e12)
-    elseif num >= 1e9 then return string.format("%.2fB", num / 1e9)
-    elseif num >= 1e6 then return string.format("%.2fM", num / 1e6)
-    elseif num >= 1e3 then return string.format("%.2fK", num / 1e3)
-    else return tostring(math.floor(num)) end
+local function BoostTrainingValue(trainType, elementName)
+    local success, err = pcall(function()
+        local mult = tonumber(MultiplierInput.Text) or multiplier
+        
+        -- Fire training value changed with massive multiplier
+        local PlayerTrainValueHasChanged = ReplicatedStorage:FindFirstChild("TrainSystem")
+            and ReplicatedStorage.TrainSystem:FindFirstChild("Bindable")
+            and ReplicatedStorage.TrainSystem.Bindable:FindFirstChild("PlayerTrainValueHasChanged")
+        
+        if PlayerTrainValueHasChanged then
+            local currentValue = mult * 1000 -- Base value yang sudah besar
+            PlayerTrainValueHasChanged:Fire(
+                Player,
+                trainType,
+                currentValue + mult,
+                currentValue
+            )
+            
+            UpdateStatus(elementName .. " boosted! Value: " .. tostring(mult))
+        else
+            UpdateStatus("Error: Remote tidak ditemukan!")
+        end
+    end)
+    
+    if not success then
+        UpdateStatus("Error: " .. tostring(err))
+    end
 end
 
--- Update
-local lastTrainCount = 0
-local function UpdateStats()
-    local currentTime = tick()
-    local elapsed = currentTime - Stats.StartTime
-    
-    if elapsed >= 1 then
-        Stats.TrainsPerSecond = Stats.TrainCount - lastTrainCount
-        lastTrainCount = Stats.TrainCount
-        Stats.StartTime = currentTime
-    end
-    
-    MultTitle.Text = string.format("🔥 MULTIPLIER: x%s", FormatNumber(Config.TrainMultiplier))
-    ThreadTitle.Text = string.format("🔥 THREADS: %d", Config.ThreadCount)
-    TPSLbl.Text = string.format("⚡ Speed: %s/sec", FormatNumber(Stats.TrainsPerSecond))
-    TrainLbl.Text = string.format("🎯 Trains: %s", FormatNumber(Stats.TrainCount))
-    CPLbl.Text = string.format("💎 CP: %s", FormatNumber(Stats.LastCombatPower))
-    BuffLbl.Text = string.format("🌟 Buffs: %d", Stats.BuffsApplied)
-    ThreadLbl.Text = string.format("🔥 Threads: %d/%d", Stats.ThreadsActive, Config.ThreadCount)
-end
-
--- Inputs
-MultInput.FocusLost:Connect(function()
-    local v = tonumber(MultInput.Text)
-    if v and v >= 1 and v <= 999999999999 then
-        Config.TrainMultiplier = math.floor(v)
-        UpdateStats()
-    else
-        MultInput.Text = tostring(Config.TrainMultiplier)
-    end
-end)
-
-ThreadInput.FocusLost:Connect(function()
-    local v = tonumber(ThreadInput.Text)
-    if v and v >= 1 and v <= 150 then
-        Config.ThreadCount = math.floor(v)
-        UpdateStats()
-    else
-        ThreadInput.Text = tostring(Config.ThreadCount)
-    end
-end)
-
--- Buttons
-MinBtn.MouseButton1Click:Connect(function()
-    MainFrame.Visible = false
-    MinFrame.Visible = true
-end)
-
-RestoreBtn.MouseButton1Click:Connect(function()
-    MainFrame.Visible = true
-    MinFrame.Visible = false
-end)
-
-CloseBtn.MouseButton1Click:Connect(function()
-    Config.Enabled = false
-    ScreenGui:Destroy()
-end)
-
-BuffToggle.MouseButton1Click:Connect(function()
-    Config.AutoBuffs = not Config.AutoBuffs
-    if Config.AutoBuffs then
-        BuffToggle.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
-        BuffToggle.Text = "🌟 AUTO BUFFS: ON"
-    else
-        BuffToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 80)
-        BuffToggle.Text = "🌟 AUTO BUFFS: OFF"
-    end
-end)
-
-ActivateBtn.MouseButton1Click:Connect(function()
-    Config.Enabled = not Config.Enabled
-    Config.AutoTrain = Config.Enabled
-    
-    if Config.Enabled then
-        ActivateBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-        ActivateBtn.Text = "⛔ STOP"
-        StatusLbl.Text = "🔥 ACTIVE!"
-        StatusLbl.TextColor3 = Color3.fromRGB(0, 255, 100)
-        MinStatusLbl.Text = "🔥 ON"
-        MinStatusLbl.TextColor3 = Color3.fromRGB(0, 255, 100)
-        ActStroke.Color = Color3.fromRGB(255, 0, 0)
-        Stats.StartTime = tick()
-        lastTrainCount = 0
-    else
-        ActivateBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 100)
-        ActivateBtn.Text = "🚀 ACTIVATE"
-        StatusLbl.Text = "⚪ STANDBY"
-        StatusLbl.TextColor3 = Color3.fromRGB(200, 200, 255)
-        MinStatusLbl.Text = "⚪ OFF"
-        MinStatusLbl.TextColor3 = Color3.fromRGB(255, 100, 100)
-        ActStroke.Color = Color3.fromRGB(0, 255, 150)
-    end
-end)
-
--- Cache
-task.spawn(function()
-    task.wait(1)
-    
-    local TS = ReplicatedStorage:FindFirstChild("TrainSystem")
-    if TS then
-        local Remote = TS:FindFirstChild("Remote")
-        if Remote then
-            Cache.SpeedRemote = Remote:FindFirstChild("TrainSpeedHasChanged")
-        end
-        local Bindable = TS:FindFirstChild("Bindable")
-        if Bindable then
-            Cache.GetCombatPower = Bindable:FindFirstChild("GetCombatPower")
-            Cache.ApplyAddFrenzy = Bindable:FindFirstChild("ApplyAddFrenzyValue")
-        end
-    end
-    
-    local TE = ReplicatedStorage:FindFirstChild("TrainEquipment")
-    if TE then
-        local Remote = TE:FindFirstChild("Remote")
-        if Remote then
-            Cache.StationaryTrain = Remote:FindFirstChild("ApplyStationaryTrain")
-            Cache.MobileTrain = Remote:FindFirstChild("ApplyMobileTrain")
-            Cache.BindingEffect = Remote:FindFirstChild("ApplyBindingTrainingEffect")
-            Cache.BoostEffect = Remote:FindFirstChild("ApplyBindingTrainingBoostEffect")
-        end
-    end
-    
-    local ItemBackpack = ReplicatedStorage:FindFirstChild("PlayerItemBackpack")
-    if ItemBackpack then
-        local Remote = ItemBackpack:FindFirstChild("Remote")
-        if Remote then
-            Cache.UseItem = Remote:FindFirstChild("TryOperatingItemByPlayer")
-        end
-    end
-    
-    print("✅ Delta Safe: Remotes ready!")
-end)
-
--- Buff function
-local lastBuffTime = 0
-local function ApplyBuffs()
-    if not Config.AutoBuffs or not Cache.UseItem then return end
-    
-    local currentTime = tick()
-    if currentTime - lastBuffTime < Config.BuffInterval then return end
-    
+local function UpdateCombatPower()
     pcall(function()
-        for _, item in ipairs(BuffItems) do
-            pcall(function()
-                for slot = 401, 410 do
-                    pcall(function()
-                        Cache.UseItem:InvokeServer(
-                            {GridInfo = {Id = item.Id, Num = 1}, GridIndex = tostring(slot)},
-                            item.Id,
-                            1,
-                            {Operation = "UseItem", PointingOperation = "UseSingleBuffConsum"}
-                        )
-                    end)
-                end
-                Stats.BuffsApplied = Stats.BuffsApplied + 1
-                task.wait(0.05)
-            end)
-        end
+        local mult = tonumber(MultiplierInput.Text) or multiplier
+        local combatPower = mult * 4 -- Total dari 4 element
         
-        if Cache.ApplyAddFrenzy then
-            for i = 1, 5 do
-                Cache.ApplyAddFrenzy:Invoke(999)
-                task.wait(0.01)
-            end
-        end
+        local PlayerCombatPowerHasChanged = ReplicatedStorage:FindFirstChild("TrainSystem")
+            and ReplicatedStorage.TrainSystem:FindFirstChild("Remote")
+            and ReplicatedStorage.TrainSystem.Remote:FindFirstChild("PlayerCombatPowerHasChanged")
         
-        lastBuffTime = currentTime
-        print(string.format("✅ Buffs applied! Total: %d", Stats.BuffsApplied))
+        if PlayerCombatPowerHasChanged then
+            firesignal(PlayerCombatPowerHasChanged.OnClientEvent, Player, combatPower)
+        end
     end)
 end
 
--- Training thread
-local function TrainingThread(threadID)
-    while true do
-        if not Config.InstantMode then task.wait(0.001) end
+-- Button Functions
+CloseButton.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+end)
+
+MinimizeButton.MouseButton1Click:Connect(function()
+    isMinimized = not isMinimized
+    if isMinimized then
+        MainFrame.Size = UDim2.new(0, 350, 0, 35)
+        MinimizeButton.Text = "+"
+    else
+        MainFrame.Size = UDim2.new(0, 350, 0, 400)
+        MinimizeButton.Text = "-"
+    end
+end)
+
+ArmsButton.MouseButton1Click:Connect(function()
+    BoostTrainingValue(1, "Arms")
+    UpdateCombatPower()
+end)
+
+LegsButton.MouseButton1Click:Connect(function()
+    BoostTrainingValue(2, "Legs")
+    UpdateCombatPower()
+end)
+
+BackButton.MouseButton1Click:Connect(function()
+    BoostTrainingValue(3, "Back")
+    UpdateCombatPower()
+end)
+
+AgilityButton.MouseButton1Click:Connect(function()
+    BoostTrainingValue(4, "Agility")
+    UpdateCombatPower()
+end)
+
+AutoTrainButton.MouseButton1Click:Connect(function()
+    isAutoTraining = not isAutoTraining
+    
+    if isAutoTraining then
+        AutoTrainButton.Text = "Stop Auto Train"
+        AutoTrainButton.BackgroundColor3 = Color3.fromRGB(255, 100, 100)
+        UpdateStatus("Auto Training: ACTIVE\nBoosting all elements...")
         
-        if Config.AutoTrain and Config.Enabled then
-            Stats.ThreadsActive = Stats.ThreadsActive + 1
-            
-            pcall(function()
-                -- INCREASED iterations for MORE GAINS!
-                local iterations = math.floor(Config.TrainMultiplier / 1000) -- Changed from 2000 to 1000!
-                iterations = math.max(1, math.min(iterations, 1000)) -- Max 1000 (was 500)!
-                
-                for i = 1, iterations do
-                    -- Train with BOOST multiplier!
-                    for boost = 1, Config.BoostMultiplier do
-                        if Cache.StationaryTrain then
-                            Cache.StationaryTrain:InvokeServer()
-                        end
-                        
-                        if Cache.MobileTrain then
-                            Cache.MobileTrain:InvokeServer()
-                        end
-                    end
-                    
-                    -- Apply effects MORE OFTEN (every 10 instead of 20)
-                    if i % 10 == 0 then
-                        if Cache.BindingEffect then
-                            Cache.BindingEffect:InvokeServer("Training_2001", "Emit_2")
-                        end
-                        
-                        if Cache.BoostEffect then
-                            Cache.BoostEffect:InvokeServer()
-                        end
-                        
-                        -- Extra frenzy boost
-                        if Cache.ApplyAddFrenzy then
-                            Cache.ApplyAddFrenzy:Invoke(999)
-                        end
-                    end
-                    
-                    Stats.TrainCount = Stats.TrainCount + Config.BoostMultiplier
-                    
-                    if not Config.InstantMode and i < iterations then
-                        task.wait(0.001)
-                    end
-                end
-                
-                if threadID == 1 then
-                    ApplyBuffs()
-                end
-            end)
-            
-            task.wait()
-            Stats.ThreadsActive = math.max(0, Stats.ThreadsActive - 1)
-        else
-            task.wait(0.1)
-        end
-    end
-end
-
--- Spawn threads
-task.spawn(function()
-    task.wait(2)
-    
-    for i = 1, Config.ThreadCount do
-        task.spawn(function()
-            TrainingThread(i)
-        end)
-    end
-    
-    print(string.format("✅ Spawned %d threads!", Config.ThreadCount))
-end)
-
--- Speed spam (NO HOOKS - Direct calls)
-RunService.Heartbeat:Connect(function()
-    if Config.Enabled and Cache.SpeedRemote then
-        pcall(function()
-            Cache.SpeedRemote:FireServer(Config.SpeedMultiplier * 999)
-        end)
-    end
-end)
-
-RunService.RenderStepped:Connect(function()
-    if Config.Enabled and Config.InstantMode then
-        pcall(function()
-            if Cache.SpeedRemote then
-                Cache.SpeedRemote:FireServer(Config.SpeedMultiplier * 9999)
-            end
-            
-            if Cache.ApplyAddFrenzy then
-                Cache.ApplyAddFrenzy:Invoke(500)
+        spawn(function()
+            while isAutoTraining do
+                BoostTrainingValue(1, "Arms")
+                wait(0.1)
+                BoostTrainingValue(2, "Legs")
+                wait(0.1)
+                BoostTrainingValue(3, "Back")
+                wait(0.1)
+                BoostTrainingValue(4, "Agility")
+                wait(0.1)
+                UpdateCombatPower()
+                wait(1)
             end
         end)
+    else
+        AutoTrainButton.Text = "Start Auto Train All"
+        AutoTrainButton.BackgroundColor3 = Color3.fromRGB(100, 200, 255)
+        UpdateStatus("Auto Training: STOPPED")
     end
 end)
 
--- Auto buff loop
-task.spawn(function()
-    while true do
-        task.wait(Config.BuffInterval)
-        
-        if Config.Enabled and Config.AutoBuffs then
-            ApplyBuffs()
-        end
-    end
-end)
+UpdateStatus("Script loaded!\n\nMultiplier: " .. tostring(multiplier) .. "\n\nSiap boost Combat Power!")
 
--- Effects spam
-task.spawn(function()
-    while true do
-        task.wait(Config.InstantMode and 0 or 0.05)
-        
-        if Config.Enabled then
-            pcall(function()
-                if Cache.BindingEffect then
-                    Cache.BindingEffect:InvokeServer("Training_2001", "Emit_2")
-                end
-                
-                if Cache.BoostEffect then
-                    Cache.BoostEffect:InvokeServer()
-                end
-            end)
-        end
-    end
-end)
-
--- Monitor CP
-task.spawn(function()
-    while task.wait(0.5) do
-        if Config.Enabled and Cache.GetCombatPower then
-            pcall(function()
-                local cp = Cache.GetCombatPower:Invoke(player)
-                if cp and typeof(cp) == "number" then
-                    Stats.LastCombatPower = cp
-                end
-            end)
-        end
-        UpdateStats()
-    end
-end)
-
--- Visual
-task.spawn(function()
-    local rotation = 0
-    while task.wait(0.03) do
-        rotation = (rotation + 4) % 360
-        
-        if Config.Enabled then
-            Stroke.Color = Color3.fromRGB(
-                math.floor(100 + 155 * math.sin(rotation * 0.1)),
-                255,
-                math.floor(100 + 155 * math.cos(rotation * 0.15))
-            )
-        else
-            Stroke.Color = Color3.fromRGB(0, 255, 100)
-        end
-    end
-end)
-
--- Init
-UpdateStats()
-
-print("✅ ========================================================")
-print("✅ DELTA SAFE MODE - NO HOOKS REQUIRED!")
-print("✅ ========================================================")
-print("")
-print("🔥 SAFE VERSION:")
-print("   • NO hookmetamethod - Works on any executor!")
-print("   • NO __namecall hooks")
-print("   • Direct remote calls only")
-print("   • 100% stable and safe")
-print("")
-print("⚡ CONFIGURATION:")
-print("   • Multiplier: 100 MILLION (default)")
-print("   • Threads: 100 parallel")
-print("   • Speed: 500,000x")
-print("   • Iterations: 500 per thread")
-print("   • Instant Mode: ON")
-print("")
-print("🌟 BUFF ITEMS:")
-print("   • Item 18: 💪 Arms Boost")
-print("   • Item 19: 🔨 Back Boost")
-print("   • Item 20: 🦵 Legs Boost")
-print("   • Item 21: ⚡ Agility Boost")
-print("   • Auto-use every 10 seconds")
-print("")
-print("📊 PERFORMANCE:")
-print("   • 100 threads × 500 iterations = 50,000 trains/cycle")
-print("   • Cycle: 0.05s = 1M trains/second")
-print("   • Base Arms gain: 18M/second")
-print("   • With buffs: 50M+/second")
-print("")
-print("🎯 EXPECTED RESULTS:")
-print("   Without buffs:")
-print("   • 20M CP/second")
-print("   • 800M → 1B in 10 seconds")
-print("   • 800M → 10B in 8 minutes")
-print("")
-print("   With ALL buffs (3-5x):")
-print("   • 60-100M CP/second")
-print("   • 800M → 1B in 3 seconds")
-print("   • 800M → 10B in 2 minutes")
-print("   • 800M → 100B in 20 minutes")
-print("   • 800M → 1T in 3-4 hours!")
-print("")
-print("💡 USAGE:")
-print("   1. Stock buff items: 18, 19, 20, 21")
-print("   2. Set multiplier (100M recommended)")
-print("   3. Set threads (100)")
-print("   4. Enable AUTO BUFFS")
-print("   5. Click ACTIVATE")
-print("   6. Watch stats increase!")
-print("")
-print("⚠️ IMPORTANT:")
-print("   • Make sure you have buff items in inventory!")
-print("   • Items will be auto-used from slots 401-410")
-print("   • If no items, script still works (just slower)")
-print("   • Monitor 'Buffs' counter - should increase every 10s")
-print("")
-print("🔧 NO HOOKS = MAXIMUM COMPATIBILITY:")
-print("   • Works on Delta, Synapse, Krnl, Fluxus, etc")
-print("   • No need for special hook functions")
-print("   • Direct API calls only")
-print("   • Safe from anti-cheat detection")
-print("")
-print("✅ ADVANTAGES:")
-print("   • More stable (no hook conflicts)")
-print("   • Better compatibility")
-print("   • Easier to debug")
-print("   • Same performance as hook version!")
-print("")
-print("🚀 FEATURES:")
-print("   • 100 parallel training threads")
-print("   • Auto buff item usage")
-print("   • Continuous speed boost")
-print("   • Frenzy boost every frame")
-print("   • Effects spam")
-print("   • Real-time stats")
-print("   • Minimizable GUI")
-print("")
-print("💎 TIPS FOR MAXIMUM SPEED:")
-print("   • Keep multiplier 50M-200M")
-print("   • Use 100+ threads")
-print("   • Stock 50+ of each buff item")
-print("   • Enable auto buffs")
-print("   • Don't move character")
-print("   • Let it run AFK")
-print("")
-print("✅ DELTA SAFE MODE READY!")
-print("✅ STOCK YOUR BUFF ITEMS (18,19,20,21)!")
-print("✅ LET'S GO TO TRILLIONS!")
-print("==========================================================")
+print("Combat Power Booster loaded successfully!")
+print("GUI created - Drag to move, click buttons to boost!")
