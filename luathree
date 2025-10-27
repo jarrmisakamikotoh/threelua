@@ -1,5 +1,5 @@
--- Delta Combat Multiplier - SAFE VERSION (No Hooks)
--- Maximum performance without hookmetamethod
+-- Delta Combat Multiplier - Enhanced from obfuscated script
+-- Decoded and optimized version
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
@@ -9,9 +9,9 @@ local playerGui = player:WaitForChild("PlayerGui")
 
 -- Configuration
 local Config = {
-    TrainMultiplier = 100000000,   -- 100 MILLION!
-    SpeedMultiplier = 500000,      -- 500K speed
-    ThreadCount = 100,             -- 100 threads
+    TrainMultiplier = 100000000,   -- 100 MILLION
+    SpeedMultiplier = 500000,
+    ThreadCount = 100,
     AutoBuffs = true,
     BuffInterval = 10,
     Enabled = false,
@@ -31,80 +31,66 @@ local Stats = {
 -- Cache
 local Cache = {}
 
--- Buff Items
+-- Buff Items (corrected)
 local BuffItems = {
-    {Id = 18, Name = "Arms"},
-    {Id = 19, Name = "Back"},
-    {Id = 20, Name = "Legs"},
-    {Id = 21, Name = "Agility"}
+    {Id = 18, Name = "Arms Buff"},
+    {Id = 19, Name = "Back Buff"},
+    {Id = 20, Name = "Legs Buff"},
+    {Id = 21, Name = "Agility Buff"}
 }
 
--- GUI
+-- Simple GUI
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "DeltaSafe"
+ScreenGui.Name = "DeltaEnhanced"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = playerGui
 
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 500, 0, 650)
-MainFrame.Position = UDim2.new(0.5, -250, 0.5, -325)
-MainFrame.BackgroundColor3 = Color3.fromRGB(5, 5, 10)
+MainFrame.Size = UDim2.new(0, 480, 0, 600)
+MainFrame.Position = UDim2.new(0.5, -240, 0.5, -300)
+MainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 15)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
 MainFrame.Draggable = true
 MainFrame.Parent = ScreenGui
 
 local Corner = Instance.new("UICorner")
-Corner.CornerRadius = UDim.new(0, 16)
+Corner.CornerRadius = UDim.new(0, 15)
 Corner.Parent = MainFrame
 
 local Stroke = Instance.new("UIStroke")
-Stroke.Color = Color3.fromRGB(0, 255, 100)
-Stroke.Thickness = 4
+Stroke.Color = Color3.fromRGB(0, 200, 255)
+Stroke.Thickness = 3
 Stroke.Parent = MainFrame
 
 -- Header
 local Header = Instance.new("Frame")
-Header.Size = UDim2.new(1, 0, 0, 65)
+Header.Size = UDim2.new(1, 0, 0, 60)
 Header.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 Header.BorderSizePixel = 0
 Header.Parent = MainFrame
 
 local HCorner = Instance.new("UICorner")
-HCorner.CornerRadius = UDim.new(0, 16)
+HCorner.CornerRadius = UDim.new(0, 15)
 HCorner.Parent = Header
 
 local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, -100, 1, 0)
+Title.Size = UDim2.new(1, -90, 1, 0)
 Title.Position = UDim2.new(0, 15, 0, 0)
 Title.BackgroundTransparency = 1
-Title.Text = "⚡ DELTA SAFE MODE"
-Title.TextColor3 = Color3.fromRGB(0, 255, 100)
-Title.TextSize = 22
+Title.Text = "⚡ DELTA ENHANCED"
+Title.TextColor3 = Color3.fromRGB(0, 255, 255)
+Title.TextSize = 20
 Title.Font = Enum.Font.GothamBlack
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Parent = Header
 
-local MinBtn = Instance.new("TextButton")
-MinBtn.Size = UDim2.new(0, 40, 0, 40)
-MinBtn.Position = UDim2.new(1, -92, 0, 13)
-MinBtn.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
-MinBtn.Text = "−"
-MinBtn.TextSize = 30
-MinBtn.Font = Enum.Font.GothamBlack
-MinBtn.BorderSizePixel = 0
-MinBtn.Parent = Header
-
-local MCorner = Instance.new("UICorner")
-MCorner.CornerRadius = UDim.new(0, 10)
-MCorner.Parent = MinBtn
-
 local CloseBtn = Instance.new("TextButton")
 CloseBtn.Size = UDim2.new(0, 40, 0, 40)
-CloseBtn.Position = UDim2.new(1, -48, 0, 13)
+CloseBtn.Position = UDim2.new(1, -45, 0, 10)
 CloseBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
 CloseBtn.Text = "✕"
-CloseBtn.TextSize = 22
+CloseBtn.TextSize = 20
 CloseBtn.Font = Enum.Font.GothamBlack
 CloseBtn.BorderSizePixel = 0
 CloseBtn.Parent = Header
@@ -115,15 +101,15 @@ CCorner.Parent = CloseBtn
 
 -- Content
 local Content = Instance.new("Frame")
-Content.Size = UDim2.new(1, -30, 1, -80)
-Content.Position = UDim2.new(0, 15, 0, 73)
+Content.Size = UDim2.new(1, -30, 1, -75)
+Content.Position = UDim2.new(0, 15, 0, 68)
 Content.BackgroundTransparency = 1
 Content.Parent = MainFrame
 
 -- Stats
 local StatsFrame = Instance.new("Frame")
-StatsFrame.Size = UDim2.new(1, 0, 0, 200)
-StatsFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
+StatsFrame.Size = UDim2.new(1, 0, 0, 180)
+StatsFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
 StatsFrame.BorderSizePixel = 0
 StatsFrame.Parent = Content
 
@@ -132,52 +118,52 @@ SCorner.CornerRadius = UDim.new(0, 12)
 SCorner.Parent = StatsFrame
 
 local StatsTitle = Instance.new("TextLabel")
-StatsTitle.Size = UDim2.new(1, -20, 0, 28)
+StatsTitle.Size = UDim2.new(1, -20, 0, 25)
 StatsTitle.Position = UDim2.new(0, 10, 0, 5)
 StatsTitle.BackgroundTransparency = 1
-StatsTitle.Text = "📊 PERFORMANCE"
+StatsTitle.Text = "📊 STATS"
 StatsTitle.TextColor3 = Color3.fromRGB(0, 255, 200)
-StatsTitle.TextSize = 17
+StatsTitle.TextSize = 16
 StatsTitle.Font = Enum.Font.GothamBlack
 StatsTitle.TextXAlignment = Enum.TextXAlignment.Left
 StatsTitle.Parent = StatsFrame
 
 local StatusLbl = Instance.new("TextLabel")
-StatusLbl.Size = UDim2.new(1, -20, 0, 24)
-StatusLbl.Position = UDim2.new(0, 10, 0, 36)
+StatusLbl.Size = UDim2.new(1, -20, 0, 22)
+StatusLbl.Position = UDim2.new(0, 10, 0, 33)
 StatusLbl.BackgroundTransparency = 1
 StatusLbl.Text = "⚪ STANDBY"
 StatusLbl.TextColor3 = Color3.fromRGB(200, 200, 255)
-StatusLbl.TextSize = 15
+StatusLbl.TextSize = 14
 StatusLbl.Font = Enum.Font.GothamBold
 StatusLbl.TextXAlignment = Enum.TextXAlignment.Left
 StatusLbl.Parent = StatsFrame
 
 local function CreateStatLabel(text, yPos)
     local lbl = Instance.new("TextLabel")
-    lbl.Size = UDim2.new(1, -20, 0, 22)
+    lbl.Size = UDim2.new(1, -20, 0, 20)
     lbl.Position = UDim2.new(0, 10, 0, yPos)
     lbl.BackgroundTransparency = 1
     lbl.Text = text
     lbl.TextColor3 = Color3.fromRGB(255, 255, 150)
-    lbl.TextSize = 14
+    lbl.TextSize = 13
     lbl.Font = Enum.Font.Gotham
     lbl.TextXAlignment = Enum.TextXAlignment.Left
     lbl.Parent = StatsFrame
     return lbl
 end
 
-local TPSLbl = CreateStatLabel("⚡ Speed: 0/sec", 64)
-local TrainLbl = CreateStatLabel("🎯 Trains: 0", 90)
-local CPLbl = CreateStatLabel("💎 CP: 0", 116)
-local BuffLbl = CreateStatLabel("🌟 Buffs: 0", 142)
-local ThreadLbl = CreateStatLabel("🔥 Threads: 0/100", 168)
+local TPSLbl = CreateStatLabel("⚡ Speed: 0/sec", 58)
+local TrainLbl = CreateStatLabel("🎯 Trains: 0", 81)
+local CPLbl = CreateStatLabel("💎 CP: 0", 104)
+local BuffLbl = CreateStatLabel("🌟 Buffs: 0", 127)
+local ThreadLbl = CreateStatLabel("🔥 Threads: 0/100", 150)
 
--- Multiplier
+-- Multiplier Input
 local MultFrame = Instance.new("Frame")
-MultFrame.Size = UDim2.new(1, 0, 0, 100)
-MultFrame.Position = UDim2.new(0, 0, 0, 210)
-MultFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
+MultFrame.Size = UDim2.new(1, 0, 0, 95)
+MultFrame.Position = UDim2.new(0, 0, 0, 190)
+MultFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
 MultFrame.BorderSizePixel = 0
 MultFrame.Parent = Content
 
@@ -186,24 +172,24 @@ MultCorner.CornerRadius = UDim.new(0, 12)
 MultCorner.Parent = MultFrame
 
 local MultTitle = Instance.new("TextLabel")
-MultTitle.Size = UDim2.new(1, -20, 0, 26)
+MultTitle.Size = UDim2.new(1, -20, 0, 24)
 MultTitle.Position = UDim2.new(0, 10, 0, 5)
 MultTitle.BackgroundTransparency = 1
 MultTitle.Text = "🔥 MULTIPLIER: x100M"
 MultTitle.TextColor3 = Color3.fromRGB(255, 255, 0)
-MultTitle.TextSize = 16
+MultTitle.TextSize = 15
 MultTitle.Font = Enum.Font.GothamBlack
 MultTitle.TextXAlignment = Enum.TextXAlignment.Left
 MultTitle.Parent = MultFrame
 
 local MultInput = Instance.new("TextBox")
-MultInput.Size = UDim2.new(1, -20, 0, 55)
-MultInput.Position = UDim2.new(0, 10, 0, 35)
-MultInput.BackgroundColor3 = Color3.fromRGB(5, 5, 10)
+MultInput.Size = UDim2.new(1, -20, 0, 52)
+MultInput.Position = UDim2.new(0, 10, 0, 33)
+MultInput.BackgroundColor3 = Color3.fromRGB(10, 10, 15)
 MultInput.BorderSizePixel = 0
 MultInput.Text = "100000000"
 MultInput.TextColor3 = Color3.fromRGB(255, 255, 0)
-MultInput.TextSize = 26
+MultInput.TextSize = 24
 MultInput.Font = Enum.Font.GothamBlack
 MultInput.Parent = MultFrame
 
@@ -211,11 +197,11 @@ local MICorner = Instance.new("UICorner")
 MICorner.CornerRadius = UDim.new(0, 10)
 MICorner.Parent = MultInput
 
--- Threads
+-- Thread Input
 local ThreadFrame = Instance.new("Frame")
-ThreadFrame.Size = UDim2.new(1, 0, 0, 100)
-ThreadFrame.Position = UDim2.new(0, 0, 0, 320)
-ThreadFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
+ThreadFrame.Size = UDim2.new(1, 0, 0, 95)
+ThreadFrame.Position = UDim2.new(0, 0, 0, 295)
+ThreadFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
 ThreadFrame.BorderSizePixel = 0
 ThreadFrame.Parent = Content
 
@@ -224,24 +210,24 @@ ThreadCorner.CornerRadius = UDim.new(0, 12)
 ThreadCorner.Parent = ThreadFrame
 
 local ThreadTitle = Instance.new("TextLabel")
-ThreadTitle.Size = UDim2.new(1, -20, 0, 26)
+ThreadTitle.Size = UDim2.new(1, -20, 0, 24)
 ThreadTitle.Position = UDim2.new(0, 10, 0, 5)
 ThreadTitle.BackgroundTransparency = 1
 ThreadTitle.Text = "🔥 THREADS: 100"
 ThreadTitle.TextColor3 = Color3.fromRGB(0, 255, 255)
-ThreadTitle.TextSize = 16
+ThreadTitle.TextSize = 15
 ThreadTitle.Font = Enum.Font.GothamBlack
 ThreadTitle.TextXAlignment = Enum.TextXAlignment.Left
 ThreadTitle.Parent = ThreadFrame
 
 local ThreadInput = Instance.new("TextBox")
-ThreadInput.Size = UDim2.new(1, -20, 0, 55)
-ThreadInput.Position = UDim2.new(0, 10, 0, 35)
-ThreadInput.BackgroundColor3 = Color3.fromRGB(5, 5, 10)
+ThreadInput.Size = UDim2.new(1, -20, 0, 52)
+ThreadInput.Position = UDim2.new(0, 10, 0, 33)
+ThreadInput.BackgroundColor3 = Color3.fromRGB(10, 10, 15)
 ThreadInput.BorderSizePixel = 0
 ThreadInput.Text = "100"
 ThreadInput.TextColor3 = Color3.fromRGB(0, 255, 255)
-ThreadInput.TextSize = 26
+ThreadInput.TextSize = 24
 ThreadInput.Font = Enum.Font.GothamBlack
 ThreadInput.Parent = ThreadFrame
 
@@ -249,17 +235,16 @@ local TICorner = Instance.new("UICorner")
 TICorner.CornerRadius = UDim.new(0, 10)
 TICorner.Parent = ThreadInput
 
--- Buff info
+-- Buff Info
 local BuffInfo = Instance.new("TextLabel")
-BuffInfo.Size = UDim2.new(1, 0, 0, 60)
-BuffInfo.Position = UDim2.new(0, 0, 0, 430)
-BuffInfo.BackgroundColor3 = Color3.fromRGB(20, 15, 30)
+BuffInfo.Size = UDim2.new(1, 0, 0, 50)
+BuffInfo.Position = UDim2.new(0, 0, 0, 400)
+BuffInfo.BackgroundColor3 = Color3.fromRGB(25, 20, 35)
 BuffInfo.BorderSizePixel = 0
-BuffInfo.Text = "💪18-Arms | 🔨19-Back | 🦵20-Legs | ⚡21-Agility\nAuto-use every 10 seconds"
+BuffInfo.Text = "💪18-Arms | 🦵20-Legs | 🔨19-Back | ⚡21-Agility"
 BuffInfo.TextColor3 = Color3.fromRGB(200, 255, 200)
-BuffInfo.TextSize = 13
+BuffInfo.TextSize = 12
 BuffInfo.Font = Enum.Font.Gotham
-BuffInfo.TextWrapped = true
 BuffInfo.Parent = Content
 
 local BICorner = Instance.new("UICorner")
@@ -268,98 +253,37 @@ BICorner.Parent = BuffInfo
 
 -- Buff Toggle
 local BuffToggle = Instance.new("TextButton")
-BuffToggle.Size = UDim2.new(1, 0, 0, 50)
-BuffToggle.Position = UDim2.new(0, 0, 0, 500)
-BuffToggle.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
+BuffToggle.Size = UDim2.new(1, 0, 0, 45)
+BuffToggle.Position = UDim2.new(0, 0, 0, 460)
+BuffToggle.BackgroundColor3 = Color3.fromRGB(0, 180, 80)
 BuffToggle.Text = "🌟 AUTO BUFFS: ON"
-BuffToggle.TextSize = 18
+BuffToggle.TextSize = 16
 BuffToggle.Font = Enum.Font.GothamBlack
 BuffToggle.BorderSizePixel = 0
 BuffToggle.Parent = Content
 
 local BuffCorner = Instance.new("UICorner")
-BuffCorner.CornerRadius = UDim.new(0, 12)
+BuffCorner.CornerRadius = UDim.new(0, 10)
 BuffCorner.Parent = BuffToggle
 
--- Activate
+-- Activate Button
 local ActivateBtn = Instance.new("TextButton")
-ActivateBtn.Size = UDim2.new(1, 0, 0, 58)
-ActivateBtn.Position = UDim2.new(0, 0, 0, 560)
-ActivateBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 100)
+ActivateBtn.Size = UDim2.new(1, 0, 0, 52)
+ActivateBtn.Position = UDim2.new(0, 0, 0, 515)
+ActivateBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
 ActivateBtn.Text = "🚀 ACTIVATE"
-ActivateBtn.TextSize = 22
+ActivateBtn.TextSize = 20
 ActivateBtn.Font = Enum.Font.GothamBlack
 ActivateBtn.BorderSizePixel = 0
 ActivateBtn.Parent = Content
 
 local ActCorner = Instance.new("UICorner")
-ActCorner.CornerRadius = UDim.new(0, 12)
+ActCorner.CornerRadius = UDim.new(0, 10)
 ActCorner.Parent = ActivateBtn
 
-local ActStroke = Instance.new("UIStroke")
-ActStroke.Color = Color3.fromRGB(0, 255, 150)
-ActStroke.Thickness = 4
-ActStroke.Parent = ActivateBtn
-
--- Minimized
-local MinFrame = Instance.new("Frame")
-MinFrame.Size = UDim2.new(0, 320, 0, 60)
-MinFrame.Position = UDim2.new(0.5, -160, 0, 20)
-MinFrame.BackgroundColor3 = Color3.fromRGB(5, 5, 10)
-MinFrame.BorderSizePixel = 0
-MinFrame.Visible = false
-MinFrame.Active = true
-MinFrame.Draggable = true
-MinFrame.Parent = ScreenGui
-
-local MFCorner = Instance.new("UICorner")
-MFCorner.CornerRadius = UDim.new(0, 14)
-MFCorner.Parent = MinFrame
-
-local MFStroke = Instance.new("UIStroke")
-MFStroke.Color = Color3.fromRGB(0, 255, 100)
-MFStroke.Thickness = 3
-MFStroke.Parent = MinFrame
-
-local MinLabel = Instance.new("TextLabel")
-MinLabel.Size = UDim2.new(1, -70, 1, 0)
-MinLabel.Position = UDim2.new(0, 15, 0, 0)
-MinLabel.BackgroundTransparency = 1
-MinLabel.Text = "⚡ DELTA"
-MinLabel.TextColor3 = Color3.fromRGB(0, 255, 100)
-MinLabel.TextSize = 18
-MinLabel.Font = Enum.Font.GothamBlack
-MinLabel.TextXAlignment = Enum.TextXAlignment.Left
-MinLabel.Parent = MinFrame
-
-local MinStatusLbl = Instance.new("TextLabel")
-MinStatusLbl.Size = UDim2.new(0, 60, 1, 0)
-MinStatusLbl.Position = UDim2.new(1, -115, 0, 0)
-MinStatusLbl.BackgroundTransparency = 1
-MinStatusLbl.Text = "⚪ OFF"
-MinStatusLbl.TextColor3 = Color3.fromRGB(255, 100, 100)
-MinStatusLbl.TextSize = 14
-MinStatusLbl.Font = Enum.Font.GothamBold
-MinStatusLbl.Parent = MinFrame
-
-local RestoreBtn = Instance.new("TextButton")
-RestoreBtn.Size = UDim2.new(0, 48, 0, 48)
-RestoreBtn.Position = UDim2.new(1, -54, 0, 6)
-RestoreBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
-RestoreBtn.Text = "□"
-RestoreBtn.TextSize = 22
-RestoreBtn.Font = Enum.Font.GothamBlack
-RestoreBtn.BorderSizePixel = 0
-RestoreBtn.Parent = MinFrame
-
-local RCorner = Instance.new("UICorner")
-RCorner.CornerRadius = UDim.new(0, 10)
-RCorner.Parent = RestoreBtn
-
--- Format
+-- Format number
 local function FormatNumber(num)
-    if num >= 1e24 then return string.format("%.2fSp", num / 1e24)
-    elseif num >= 1e21 then return string.format("%.2fSx", num / 1e21)
+    if num >= 1e21 then return string.format("%.2fSx", num / 1e21)
     elseif num >= 1e18 then return string.format("%.2fQu", num / 1e18)
     elseif num >= 1e15 then return string.format("%.2fQd", num / 1e15)
     elseif num >= 1e12 then return string.format("%.2fT", num / 1e12)
@@ -369,7 +293,7 @@ local function FormatNumber(num)
     else return tostring(math.floor(num)) end
 end
 
--- Update
+-- Update stats
 local lastTrainCount = 0
 local function UpdateStats()
     local currentTime = tick()
@@ -390,7 +314,7 @@ local function UpdateStats()
     ThreadLbl.Text = string.format("🔥 Threads: %d/%d", Stats.ThreadsActive, Config.ThreadCount)
 end
 
--- Inputs
+-- Input handlers
 MultInput.FocusLost:Connect(function()
     local v = tonumber(MultInput.Text)
     if v and v >= 1 and v <= 999999999999 then
@@ -411,17 +335,7 @@ ThreadInput.FocusLost:Connect(function()
     end
 end)
 
--- Buttons
-MinBtn.MouseButton1Click:Connect(function()
-    MainFrame.Visible = false
-    MinFrame.Visible = true
-end)
-
-RestoreBtn.MouseButton1Click:Connect(function()
-    MainFrame.Visible = true
-    MinFrame.Visible = false
-end)
-
+-- Button handlers
 CloseBtn.MouseButton1Click:Connect(function()
     Config.Enabled = false
     ScreenGui:Destroy()
@@ -430,10 +344,10 @@ end)
 BuffToggle.MouseButton1Click:Connect(function()
     Config.AutoBuffs = not Config.AutoBuffs
     if Config.AutoBuffs then
-        BuffToggle.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
+        BuffToggle.BackgroundColor3 = Color3.fromRGB(0, 180, 80)
         BuffToggle.Text = "🌟 AUTO BUFFS: ON"
     else
-        BuffToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 80)
+        BuffToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
         BuffToggle.Text = "🌟 AUTO BUFFS: OFF"
     end
 end)
@@ -447,23 +361,17 @@ ActivateBtn.MouseButton1Click:Connect(function()
         ActivateBtn.Text = "⛔ STOP"
         StatusLbl.Text = "🔥 ACTIVE!"
         StatusLbl.TextColor3 = Color3.fromRGB(0, 255, 100)
-        MinStatusLbl.Text = "🔥 ON"
-        MinStatusLbl.TextColor3 = Color3.fromRGB(0, 255, 100)
-        ActStroke.Color = Color3.fromRGB(255, 0, 0)
         Stats.StartTime = tick()
         lastTrainCount = 0
     else
-        ActivateBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 100)
+        ActivateBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
         ActivateBtn.Text = "🚀 ACTIVATE"
         StatusLbl.Text = "⚪ STANDBY"
         StatusLbl.TextColor3 = Color3.fromRGB(200, 200, 255)
-        MinStatusLbl.Text = "⚪ OFF"
-        MinStatusLbl.TextColor3 = Color3.fromRGB(255, 100, 100)
-        ActStroke.Color = Color3.fromRGB(0, 255, 150)
     end
 end)
 
--- Cache
+-- Cache remotes
 task.spawn(function()
     task.wait(1)
     
@@ -499,10 +407,10 @@ task.spawn(function()
         end
     end
     
-    print("✅ Delta Safe: Remotes ready!")
+    print("✅ Delta Enhanced: Ready!")
 end)
 
--- Buff function
+-- Apply buffs
 local lastBuffTime = 0
 local function ApplyBuffs()
     if not Config.AutoBuffs or not Cache.UseItem then return end
@@ -536,7 +444,6 @@ local function ApplyBuffs()
         end
         
         lastBuffTime = currentTime
-        print(string.format("✅ Buffs applied! Total: %d", Stats.BuffsApplied))
     end)
 end
 
@@ -604,7 +511,7 @@ task.spawn(function()
     print(string.format("✅ Spawned %d threads!", Config.ThreadCount))
 end)
 
--- Speed spam (NO HOOKS - Direct calls)
+-- Speed spam
 RunService.Heartbeat:Connect(function()
     if Config.Enabled and Cache.SpeedRemote then
         pcall(function()
@@ -672,114 +579,47 @@ task.spawn(function()
     end
 end)
 
--- Visual
+-- Visual effects
 task.spawn(function()
     local rotation = 0
     while task.wait(0.03) do
-        rotation = (rotation + 4) % 360
+        rotation = (rotation + 3) % 360
         
         if Config.Enabled then
             Stroke.Color = Color3.fromRGB(
                 math.floor(100 + 155 * math.sin(rotation * 0.1)),
-                255,
-                math.floor(100 + 155 * math.cos(rotation * 0.15))
+                math.floor(200 + 55 * math.cos(rotation * 0.15)),
+                255
             )
         else
-            Stroke.Color = Color3.fromRGB(0, 255, 100)
+            Stroke.Color = Color3.fromRGB(0, 200, 255)
         end
     end
 end)
 
--- Init
+-- Initialize
 UpdateStats()
 
-print("✅ ========================================================")
-print("✅ DELTA SAFE MODE - NO HOOKS REQUIRED!")
-print("✅ ========================================================")
+print("✅ ========================================")
+print("✅ DELTA ENHANCED - LOADED!")
+print("✅ ========================================")
 print("")
-print("🔥 SAFE VERSION:")
-print("   • NO hookmetamethod - Works on any executor!")
-print("   • NO __namecall hooks")
-print("   • Direct remote calls only")
-print("   • 100% stable and safe")
+print("🔥 Clean version from obfuscated script")
+print("⚡ Multiplier: x100M (default)")
+print("🔥 Threads: 100 (default)")
+print("🌟 Auto buffs: Items 18,19,20,21")
 print("")
-print("⚡ CONFIGURATION:")
-print("   • Multiplier: 100 MILLION (default)")
-print("   • Threads: 100 parallel")
-print("   • Speed: 500,000x")
-print("   • Iterations: 500 per thread")
-print("   • Instant Mode: ON")
+print("📊 Expected Performance:")
+print("   • 50,000 trains per cycle")
+print("   • 1M trains/second")
+print("   • 20M+ CP/second (no buffs)")
+print("   • 60M+ CP/second (with buffs)")
 print("")
-print("🌟 BUFF ITEMS:")
-print("   • Item 18: 💪 Arms Boost")
-print("   • Item 19: 🔨 Back Boost")
-print("   • Item 20: 🦵 Legs Boost")
-print("   • Item 21: ⚡ Agility Boost")
-print("   • Auto-use every 10 seconds")
+print("💡 Usage:")
+print("   1. Stock buff items (18,19,20,21)")
+print("   2. Set multiplier (100M)")
+print("   3. Enable AUTO BUFFS")
+print("   4. Click ACTIVATE")
 print("")
-print("📊 PERFORMANCE:")
-print("   • 100 threads × 500 iterations = 50,000 trains/cycle")
-print("   • Cycle: 0.05s = 1M trains/second")
-print("   • Base Arms gain: 18M/second")
-print("   • With buffs: 50M+/second")
-print("")
-print("🎯 EXPECTED RESULTS:")
-print("   Without buffs:")
-print("   • 20M CP/second")
-print("   • 800M → 1B in 10 seconds")
-print("   • 800M → 10B in 8 minutes")
-print("")
-print("   With ALL buffs (3-5x):")
-print("   • 60-100M CP/second")
-print("   • 800M → 1B in 3 seconds")
-print("   • 800M → 10B in 2 minutes")
-print("   • 800M → 100B in 20 minutes")
-print("   • 800M → 1T in 3-4 hours!")
-print("")
-print("💡 USAGE:")
-print("   1. Stock buff items: 18, 19, 20, 21")
-print("   2. Set multiplier (100M recommended)")
-print("   3. Set threads (100)")
-print("   4. Enable AUTO BUFFS")
-print("   5. Click ACTIVATE")
-print("   6. Watch stats increase!")
-print("")
-print("⚠️ IMPORTANT:")
-print("   • Make sure you have buff items in inventory!")
-print("   • Items will be auto-used from slots 401-410")
-print("   • If no items, script still works (just slower)")
-print("   • Monitor 'Buffs' counter - should increase every 10s")
-print("")
-print("🔧 NO HOOKS = MAXIMUM COMPATIBILITY:")
-print("   • Works on Delta, Synapse, Krnl, Fluxus, etc")
-print("   • No need for special hook functions")
-print("   • Direct API calls only")
-print("   • Safe from anti-cheat detection")
-print("")
-print("✅ ADVANTAGES:")
-print("   • More stable (no hook conflicts)")
-print("   • Better compatibility")
-print("   • Easier to debug")
-print("   • Same performance as hook version!")
-print("")
-print("🚀 FEATURES:")
-print("   • 100 parallel training threads")
-print("   • Auto buff item usage")
-print("   • Continuous speed boost")
-print("   • Frenzy boost every frame")
-print("   • Effects spam")
-print("   • Real-time stats")
-print("   • Minimizable GUI")
-print("")
-print("💎 TIPS FOR MAXIMUM SPEED:")
-print("   • Keep multiplier 50M-200M")
-print("   • Use 100+ threads")
-print("   • Stock 50+ of each buff item")
-print("   • Enable auto buffs")
-print("   • Don't move character")
-print("   • Let it run AFK")
-print("")
-print("✅ DELTA SAFE MODE READY!")
-print("✅ STOCK YOUR BUFF ITEMS (18,19,20,21)!")
-print("✅ LET'S GO TO TRILLIONS!")
-print("==========================================================")
+print("✅ Ready to go!")
+print("========================================")
