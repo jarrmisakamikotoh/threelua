@@ -4,163 +4,87 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local PlayerName = LocalPlayer.Name
 
--- *** Konfigurasi ***
-local HYPER_MULTIPLIER = 10000000000000 -- 10 Triliun atau lebih
-local TRAIN_TYPE = 1 -- Asumsi 1 adalah Arms (dilihat dari log PlayerTrainValueHasChanged)
-local TRAIN_INCREMENT_REMOTE = "ApplyStationaryTrain" -- Asumsi remote untuk stationary train
+-- *** KONFIGURASI INTI ***
+-- Multiplier yang sangat tinggi (10 Triliun)
+local HYPER_MULTIPLIER = 10000000000000 
+local TRAIN_TYPE = 1 -- Default ke Arms
 
--- Remote Function yang terdeteksi di log Anda
-local ApplyStationaryTrain = ReplicatedStorage.TrainEquipment.Remote.ApplyStationaryTrain
+-- Remote Event/Function (Ambil dari log Anda)
+local ApplyStationaryTrain = ReplicatedStorage:FindFirstChild("TrainEquipment"):FindFirstChild("Remote"):FindFirstChild("ApplyStationaryTrain")
+local TrainSpeedRemote = ReplicatedStorage:FindFirstChild("TrainSystem"):FindFirstChild("Remote"):FindFirstChild("TrainSpeedHasChanged")
+local TryOperatingItemByPlayer = ReplicatedStorage:FindFirstChild("PlayerItemBackpack"):FindFirstChild("Remote"):FindFirstChild("TryOperatingItemByPlayer")
 
--- Fungsi untuk mendapatkan Remote Function/Event (Memastikan keberadaan)
-local function getRemote(path)
-    local parts = string.split(path, ".")
-    local current = game
-    for _, part in ipairs(parts) do
-        current = current:FindFirstChild(part)
-        if not current then return nil end
+-- Fungsi untuk memastikan Remote ada
+local function isRemoteValid(remote)
+    if not remote then
+        warn("Remote tidak ditemukan!")
+        return false
     end
-    return current
-end
-
--- Ambil Remote yang relevan
-local ApplyStationaryTrainRemote = getRemote("ReplicatedStorage.TrainEquipment.Remote.ApplyStationaryTrain")
-local TrainSpeedRemote = getRemote("ReplicatedStorage.TrainSystem.Remote.TrainSpeedHasChanged") 
-
--- Pengecekan
-if not ApplyStationaryTrainRemote then
-    warn("Remote ApplyStationaryTrain tidak ditemukan! Skrip mungkin tidak berfungsi.")
+    return true
 end
 
 -- =========================================================================
---                                 FUNGSI UTAMA TRAIN HACK
+--                                 FUNGSI UTAMA TRAIN HACK REVISI
 -- =========================================================================
 
 local function executeHyperTrain(trainType)
-    if not ApplyStationaryTrainRemote then
-        print("Gagal: Remote ApplyStationaryTrain tidak tersedia.")
+    if not isRemoteValid(TrainSpeedRemote) then
+        print("Gagal: Remote TrainSpeedHasChanged tidak tersedia.")
         return
     end
 
-    -- [Penting] Coba temukan remote yang mengontrol penambahan nilai train (di log tidak terlihat jelas)
-    -- Jika ApplyStationaryTrain tidak menerima argumen, kemungkinan dia hanya memicu event server
-    -- untuk memulai train dan server menghitung nilainya. Kita harus mencari *client-side check*
-    -- atau *remote* yang mengirim nilai yang di-klik/dihitung.
+    -- STRATEGI 1: MENGGANTI NILAI TRAIN SPEED DENGAN MULTIPLIER TINGGI
+    -- Kita asumsikan bahwa nilai yang dikirim ke TrainSpeedHasChanged adalah *peningkatan* speed/multiplier.
+    
+    local originalValue = TrainSpeedRemote:InvokeServer() -- Coba dapatkan nilai original jika itu RemoteFunction
+    local boostValue = originalValue or 4 -- Jika gagal, gunakan nilai default (4)
 
-    -- *** STRATEGI 1: Memanipulasi Train Speed (Remote Unreliable) ***
-    -- Anda memiliki: ReplicatedStorage.TrainSystem.Remote.TrainSpeedHasChanged
-    -- Remote ini mengirim kecepatan train. Kita bisa mencoba mengirim nilai yang sangat besar.
-    -- Nilai 4 adalah nilai default (dilihat dari log).
+    -- Kirim nilai yang sangat tinggi sebagai speed.
+    local finalSpeed = HYPER_MULTIPLIER 
     
-    if TrainSpeedRemote then
-        print("Mengirim TrainSpeed sangat tinggi...")
-        for i = 1, 10 do -- Kirim beberapa kali untuk memastikan
-            TrainSpeedRemote:FireServer(HYPER_MULTIPLIER)
-        end
+    print(string.format("Mengirim Hyper Train Speed sebesar %s (Tipe: %d)...", tostring(finalSpeed), trainType))
+    
+    -- TRAIN SPEED HANYA MENERIMA 1 ARGUMEN (dilihat dari log: TrainSpeedHasChanged:FireServer(4))
+    -- Kita harus memanggil *ApplyStationaryTrain* agar train benar-benar aktif di server.
+    
+    if ApplyStationaryTrain and ApplyStationaryTrain.ClassName == "RemoteFunction" then
+        print("Memanggil ApplyStationaryTrain...")
+        ApplyStationaryTrain:InvokeServer()
     end
     
-    -- *** STRATEGI 2: Melewatkan nilai ke Bindable/Remote yang mengupdate Train Value ***
-    -- Anda memiliki: ReplicatedStorage.TrainSystem.Bindable.PlayerTrainValueHasChanged
-    -- Ini adalah BindableEvent (hanya berjalan di lingkungan yang sama, tidak ke server).
-    -- Kita harus mencari Remote Event/Function yang dipanggil *setelah* train yang mengirim nilai.
-    
-    -- Karena log tidak menunjukkan Remote yang jelas mengirim nilai Train, kita akan *Hook* fungsi di client
-    -- yang bertanggung jawab atas penambahan nilai train saat tombol 'E' ditekan.
-    
-    -- Untuk tujuan demonstrasi dan peningkatan, kita akan coba memanggil ApplyStationaryTrain
-    -- dan PlayerTrainValueHasChanged (meskipun client-side) dengan harapan ada exploit
-    -- di server yang mengambil data client-side check.
-    
-    -- *Percobaan Panggilan Train (dengan asumsi server mem-validasi di tempat lain)*
-    ApplyStationaryTrainRemote:InvokeServer()
-    
-    -- *Memaksa nilai Train di Client (Hanya untuk melihat apakah ada Bindable yang dikaitkan)*
-    local TrainValueChangeEvent = getRemote("ReplicatedStorage.TrainSystem.Bindable.PlayerTrainValueHasChanged")
-    if TrainValueChangeEvent and LocalPlayer then
-        -- Asumsi: trainType 1 = Arms (dilihat dari log Anda: 1, 32011575)
-        local CurrentValue = 100000000000000000 -- Nilai sangat besar
-        local DeltaValue = CurrentValue / 1000 -- Nilai yang bertambah
+    if TrainSpeedRemote and TrainSpeedRemote.ClassName == "UnreliableRemoteEvent" then
+        -- Panggil TrainSpeedRemote setelah train dipicu
+        TrainSpeedRemote:FireServer(finalSpeed)
         
-        print("Memanipulasi Client Train Value...")
-        TrainValueChangeEvent:Fire(LocalPlayer, trainType, CurrentValue, DeltaValue)
+        -- Panggil sekali lagi ApplyStationaryTrain untuk me-refresh
+        if ApplyStationaryTrain and ApplyStationaryTrain.ClassName == "RemoteFunction" then
+            ApplyStationaryTrain:InvokeServer()
+        end
+        
+        print("Pengiriman Hyper Train Selesai. Periksa Combat Power!")
+    else
+        warn("Remote TrainSpeedRemote tidak valid atau bukan RemoteEvent/Function yang tepat.")
     end
-    
-    print("Percobaan Hyper Train Selesai. Periksa Combat Power!")
+
 end
 
-
 -- =========================================================================
---                                      GUI
+--                             FUNGSI BUFF HACK REVISI
 -- =========================================================================
-
--- Implementasi GUI sederhana (menggunakan *loadstring* yang umum di Delta)
-
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/wally-rblx/Linoria/main/Library.lua"))() -- Contoh UI Library umum
-
-local Window = Library:CreateWindow("Delta Combat Power Boost")
-
--- Tab Train Multiplier
-local TrainTab = Window:AddTab("Train Multiplier")
-local TrainSection = TrainTab:AddSection("Hyper Training (Permanent Gain)")
-
-TrainSection:AddSlider("Multiplier Value", {
-    Min = 1e12, -- 1 Triliun
-    Max = 1e18, -- 1 Kuadriliun (untuk jaga-jaga)
-    Default = HYPER_MULTIPLIER,
-    Decimals = 0,
-    Text = "Value: " .. HYPER_MULTIPLIER,
-    Callback = function(value)
-        HYPER_MULTIPLIER = value
-        print("Multiplier diatur ke: " .. tostring(value))
-    end
-})
-
-TrainSection:AddButton("💥 Arms (Type 1) - Boost", function()
-    TRAIN_TYPE = 1
-    executeHyperTrain(TRAIN_TYPE)
-end)
-
-TrainSection:AddButton("💥 Legs (Type 2) - Boost", function()
-    -- Asumsi 2 untuk Legs
-    TRAIN_TYPE = 2 
-    executeHyperTrain(TRAIN_TYPE)
-end)
-
-TrainSection:AddButton("💥 Back (Type 3) - Boost", function()
-    -- Asumsi 3 untuk Back
-    TRAIN_TYPE = 3 
-    executeHyperTrain(TRAIN_TYPE)
-end)
-
-TrainSection:AddButton("💥 Agility (Type 4) - Boost", function()
-    -- Asumsi 4 untuk Agility
-    TRAIN_TYPE = 4 
-    executeHyperTrain(TRAIN_TYPE)
-end)
-
--- ---
--- Tab Buff Multiplier (Item Buff)
-local BuffTab = Window:AddTab("Item Buff (x999)")
-local BuffSection = BuffTab:AddSection("Instant Buff Activation")
-
-local TryOperatingItemByPlayer = ReplicatedStorage.PlayerItemBackpack.Remote.TryOperatingItemByPlayer
 
 local function useBuffItem(itemId, gridIndex)
-    if not TryOperatingItemByPlayer then
-        warn("Remote TryOperatingItemByPlayer tidak ditemukan!")
+    if not isRemoteValid(TryOperatingItemByPlayer) then
+        print("Gagal: Remote TryOperatingItemByPlayer tidak tersedia.")
         return
     end
 
-    -- Logika TryOperatingItemByPlayer dari log Anda:
-    -- TryOperatingItemByPlayer:InvokeServer(
-    --    {GridInfo = {Id = 21, Num = 1}, GridIndex = "401"}, 21, 1,
-    --    {Operation = "UseItem", PointingOperation = "UseSingleBuffConsum"}
-    -- )
+    -- Manipulasi Item Num ke nilai yang sangat besar
+    local HYPER_ITEM_COUNT = 999999999 
 
     local itemData = {
         GridInfo = {
             Id = itemId,
-            Num = 999 -- Mengirim Num yang sangat besar untuk potensi exploit Multiplied
+            Num = HYPER_ITEM_COUNT -- Injeksi nilai besar di sini
         },
         GridIndex = gridIndex
     }
@@ -169,36 +93,81 @@ local function useBuffItem(itemId, gridIndex)
         PointingOperation = "UseSingleBuffConsum"
     }
     
-    -- Memanggil remote untuk menggunakan item dengan jumlah item yang dimanipulasi
+    print(string.format("Mengaktifkan Item %d (Grid: %s) dengan jumlah %s...", itemId, gridIndex, tostring(HYPER_ITEM_COUNT)))
+    
+    -- Memanggil remote dengan jumlah item yang dimanipulasi
     local success = TryOperatingItemByPlayer:InvokeServer(
         itemData,
         itemId,
-        999, -- Mengirim jumlah 999 agar buff aktif berulang kali/dengan durasi panjang
+        HYPER_ITEM_COUNT, 
         operationData
     )
     
     if success == nil then
-        print(string.format("Item %d (%s) Buff Diaktifkan (Potensi x999)!", itemId, gridIndex))
+        print(string.format("Item %d Buff Berhasil Diaktifkan (Potensi Durasi/Efek x%s)!", itemId, tostring(HYPER_ITEM_COUNT)))
     else
-        print(string.format("Item %d (%s) Buff Gagal/Balasan Server: %s", itemId, gridIndex, tostring(success)))
+        print(string.format("Item %d Buff Gagal/Balasan Server: %s", itemId, tostring(success)))
     end
 end
 
--- Asumsi Item ID dan Grid Index (misalnya Grid "401" atau "407" dari log)
-BuffSection:AddButton("🧪 Item18 (Arms Buff) - Grid 401", function()
-    useBuffItem(18, "401")
+-- =========================================================================
+--                                      GUI (Menggunakan Library Umum)
+-- =========================================================================
+
+-- Implementasi GUI sederhana (menggunakan loadstring yang umum di Delta)
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/wally-rblx/Linoria/main/Library.lua"))()
+
+local Window = Library:CreateWindow("Delta Combat Power V2")
+
+-- Tab Train Multiplier
+local TrainTab = Window:AddTab("Hyper Train")
+local TrainSection = TrainTab:AddSection("Hyper Training (Trillions CP)")
+
+TrainSection:AddSlider("Multiplier Value", {
+    Min = 1e12, 
+    Max = 1e18, 
+    Default = HYPER_MULTIPLIER,
+    Decimals = 0,
+    Text = "Value: " .. tostring(HYPER_MULTIPLIER),
+    Callback = function(value)
+        HYPER_MULTIPLIER = value
+    end
+})
+
+-- Kita tidak perlu memilih tipe train karena kita memanipulasi Train Speed/Multiplier Global
+TrainSection:AddLabel("⚠️ Pilih alat train yang ingin ditingkatkan di game, lalu klik tombol di bawah ini.")
+
+TrainSection:AddButton("🚀 AKTIFKAN HYPER SPEED TRAIN", function()
+    -- Asumsi TrainType 1 selalu berlaku untuk Train Speed, atau server mengambil TrainType aktif.
+    executeHyperTrain(TRAIN_TYPE) 
 end)
-BuffSection:AddButton("🧪 Item20 (Legs Buff) - Grid 407", function()
-    -- Menggunakan "407" karena Item20 menggunakannya di log Anda
-    useBuffItem(20, "407")
+
+-- ---
+-- Tab Buff Multiplier (Item Buff)
+local BuffTab = Window:AddTab("Item Buff")
+local BuffSection = BuffTab:AddSection("Instant Buff x999999999")
+
+BuffSection:AddLabel("Masukkan Grid Index item Anda (mis: 401, 407).")
+
+BuffSection:AddButton("🧪 Item18 (Arms Buff)", function()
+    -- Cek Grid Index yang benar di Backpack Anda
+    local grid = "401" -- Ganti jika perlu
+    useBuffItem(18, grid)
 end)
-BuffSection:AddButton("🧪 Item19 (Back Buff) - Grid 402", function()
-    -- Asumsi grid lain (perlu dicek di game)
-    useBuffItem(19, "402")
+
+BuffSection:AddButton("🧪 Item20 (Legs Buff)", function()
+    local grid = "407" -- Ganti jika perlu
+    useBuffItem(20, grid)
 end)
-BuffSection:AddButton("🧪 Item21 (Agility Buff) - Grid 401", function()
-    -- Menggunakan "401" karena Item21 menggunakannya di log Anda
-    useBuffItem(21, "401")
+
+BuffSection:AddButton("🧪 Item19 (Back Buff)", function()
+    local grid = "402" -- Ganti jika perlu
+    useBuffItem(19, grid)
+end)
+
+BuffSection:AddButton("🧪 Item21 (Agility Buff)", function()
+    local grid = "401" -- Ganti jika perlu
+    useBuffItem(21, grid)
 end)
 
 -- ---
