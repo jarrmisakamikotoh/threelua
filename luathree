@@ -1,373 +1,336 @@
--- Combat Power Booster Script for Delta Executor
--- Meningkatkan 4 Element secara REAL untuk Combat Power Persistent
+-- Combat Power Ultra Booster Script for Delta Executor
+-- Meningkatkan training values hingga ratusan triliun
 
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
-local Player = Players.LocalPlayer
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = Players.LocalPlayer
 
--- GUI Setup
+-- Configuration
+local Config = {
+    TrainMultiplier = 1000000000, -- 1 Miliar multiplier per train
+    GrowthMultiplier = 2, -- 2x growth setiap train
+    AutoTrain = false,
+    UseBuffItems = false,
+    TrainSpeed = 0.1, -- Delay antar training (detik)
+}
+
+-- GUI Creation
 local ScreenGui = Instance.new("ScreenGui")
 local MainFrame = Instance.new("Frame")
+local TitleBar = Instance.new("Frame")
 local Title = Instance.new("TextLabel")
 local CloseButton = Instance.new("TextButton")
 local MinimizeButton = Instance.new("TextButton")
-local ArmsButton = Instance.new("TextButton")
-local LegsButton = Instance.new("TextButton")
-local BackButton = Instance.new("TextButton")
-local AgilityButton = Instance.new("TextButton")
+local ContentFrame = Instance.new("Frame")
+
+-- Status Labels
+local ArmsLabel = Instance.new("TextLabel")
+local LegsLabel = Instance.new("TextLabel")
+local BackLabel = Instance.new("TextLabel")
+local AgilityLabel = Instance.new("TextLabel")
+local CombatPowerLabel = Instance.new("TextLabel")
+
+-- Control Buttons
 local AutoTrainButton = Instance.new("TextButton")
+local UseBuffsButton = Instance.new("TextButton")
+local BoostArmsButton = Instance.new("TextButton")
+local BoostLegsButton = Instance.new("TextButton")
+local BoostBackButton = Instance.new("TextButton")
+local BoostAgilityButton = Instance.new("TextButton")
+local BoostAllButton = Instance.new("TextButton")
+
+-- Multiplier Input
 local MultiplierLabel = Instance.new("TextLabel")
 local MultiplierInput = Instance.new("TextBox")
-local ElementsLabel = Instance.new("TextLabel")
-local CPLabel = Instance.new("TextLabel")
-local StatusLabel = Instance.new("TextLabel")
 
--- Variables
-local isMinimized = false
-local isAutoTraining = false
-local trainSpeed = 1000000 -- Speed multiplier default
+-- Setup GUI Properties
+ScreenGui.Name = "CombatPowerBooster"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = game:GetService("CoreGui")
 
--- GUI Properties
-ScreenGui.Name = "CombatPowerBoosterGUI"
-ScreenGui.Parent = game.CoreGui
-ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-
+-- Main Frame
 MainFrame.Name = "MainFrame"
-MainFrame.Parent = ScreenGui
-MainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-MainFrame.BorderSizePixel = 2
-MainFrame.BorderColor3 = Color3.fromRGB(0, 170, 255)
-MainFrame.Position = UDim2.new(0.35, 0, 0.25, 0)
-MainFrame.Size = UDim2.new(0, 380, 0, 520)
+MainFrame.Size = UDim2.new(0, 400, 0, 500)
+MainFrame.Position = UDim2.new(0.5, -200, 0.5, -250)
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
 MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
 
+-- Title Bar
+TitleBar.Name = "TitleBar"
+TitleBar.Size = UDim2.new(1, 0, 0, 35)
+TitleBar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+TitleBar.BorderSizePixel = 0
+TitleBar.Parent = MainFrame
+
+-- Title
 Title.Name = "Title"
-Title.Parent = MainFrame
-Title.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
-Title.Size = UDim2.new(1, 0, 0, 35)
+Title.Size = UDim2.new(1, -70, 1, 0)
+Title.BackgroundTransparency = 1
 Title.Font = Enum.Font.GothamBold
-Title.Text = "Combat Power Booster V3"
-Title.TextColor3 = Color3.fromRGB(0, 170, 255)
+Title.Text = "Combat Power Booster"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 16
+Title.Parent = TitleBar
 
+-- Close Button
 CloseButton.Name = "CloseButton"
-CloseButton.Parent = MainFrame
-CloseButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-CloseButton.Position = UDim2.new(1, -30, 0, 5)
-CloseButton.Size = UDim2.new(0, 25, 0, 25)
+CloseButton.Size = UDim2.new(0, 30, 0, 30)
+CloseButton.Position = UDim2.new(1, -35, 0, 2.5)
+CloseButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
 CloseButton.Font = Enum.Font.GothamBold
 CloseButton.Text = "X"
 CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 CloseButton.TextSize = 14
+CloseButton.Parent = TitleBar
 
+-- Minimize Button
 MinimizeButton.Name = "MinimizeButton"
-MinimizeButton.Parent = MainFrame
-MinimizeButton.BackgroundColor3 = Color3.fromRGB(255, 170, 0)
-MinimizeButton.Position = UDim2.new(1, -60, 0, 5)
-MinimizeButton.Size = UDim2.new(0, 25, 0, 25)
+MinimizeButton.Size = UDim2.new(0, 30, 0, 30)
+MinimizeButton.Position = UDim2.new(1, -70, 0, 2.5)
+MinimizeButton.BackgroundColor3 = Color3.fromRGB(50, 150, 200)
 MinimizeButton.Font = Enum.Font.GothamBold
 MinimizeButton.Text = "-"
 MinimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-MinimizeButton.TextSize = 18
+MinimizeButton.TextSize = 14
+MinimizeButton.Parent = TitleBar
 
-MultiplierLabel.Name = "MultiplierLabel"
-MultiplierLabel.Parent = MainFrame
-MultiplierLabel.BackgroundTransparency = 1
-MultiplierLabel.Position = UDim2.new(0, 10, 0, 45)
-MultiplierLabel.Size = UDim2.new(1, -20, 0, 25)
-MultiplierLabel.Font = Enum.Font.Gotham
-MultiplierLabel.Text = "Train Speed Multiplier:"
-MultiplierLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-MultiplierLabel.TextSize = 12
-MultiplierLabel.TextXAlignment = Enum.TextXAlignment.Left
+-- Content Frame
+ContentFrame.Name = "ContentFrame"
+ContentFrame.Size = UDim2.new(1, -20, 1, -45)
+ContentFrame.Position = UDim2.new(0, 10, 0, 40)
+ContentFrame.BackgroundTransparency = 1
+ContentFrame.Parent = MainFrame
 
-MultiplierInput.Name = "MultiplierInput"
-MultiplierInput.Parent = MainFrame
-MultiplierInput.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
-MultiplierInput.BorderColor3 = Color3.fromRGB(0, 170, 255)
-MultiplierInput.Position = UDim2.new(0, 10, 0, 75)
-MultiplierInput.Size = UDim2.new(1, -20, 0, 35)
-MultiplierInput.Font = Enum.Font.Gotham
-MultiplierInput.PlaceholderText = "Speed (contoh: 1000000 = 1 juta training/detik)"
-MultiplierInput.Text = "1000000"
-MultiplierInput.TextColor3 = Color3.fromRGB(255, 255, 255)
-MultiplierInput.TextSize = 12
-
-ArmsButton.Name = "ArmsButton"
-ArmsButton.Parent = MainFrame
-ArmsButton.BackgroundColor3 = Color3.fromRGB(255, 100, 100)
-ArmsButton.Position = UDim2.new(0, 10, 0, 120)
-ArmsButton.Size = UDim2.new(0.48, -10, 0, 40)
-ArmsButton.Font = Enum.Font.GothamBold
-ArmsButton.Text = "Train Arms"
-ArmsButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-ArmsButton.TextSize = 14
-
-LegsButton.Name = "LegsButton"
-LegsButton.Parent = MainFrame
-LegsButton.BackgroundColor3 = Color3.fromRGB(100, 255, 100)
-LegsButton.Position = UDim2.new(0.52, 0, 0, 120)
-LegsButton.Size = UDim2.new(0.48, -10, 0, 40)
-LegsButton.Font = Enum.Font.GothamBold
-LegsButton.Text = "Train Legs"
-LegsButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-LegsButton.TextSize = 14
-
-BackButton.Name = "BackButton"
-BackButton.Parent = MainFrame
-BackButton.BackgroundColor3 = Color3.fromRGB(100, 100, 255)
-BackButton.Position = UDim2.new(0, 10, 0, 170)
-BackButton.Size = UDim2.new(0.48, -10, 0, 40)
-BackButton.Font = Enum.Font.GothamBold
-BackButton.Text = "Train Back"
-BackButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-BackButton.TextSize = 14
-
-AgilityButton.Name = "AgilityButton"
-AgilityButton.Parent = MainFrame
-AgilityButton.BackgroundColor3 = Color3.fromRGB(255, 255, 100)
-AgilityButton.Position = UDim2.new(0.52, 0, 0, 170)
-AgilityButton.Size = UDim2.new(0.48, -10, 0, 40)
-AgilityButton.Font = Enum.Font.GothamBold
-AgilityButton.Text = "Train Agility"
-AgilityButton.TextColor3 = Color3.fromRGB(0, 0, 0)
-AgilityButton.TextSize = 14
-
-AutoTrainButton.Name = "AutoTrainButton"
-AutoTrainButton.Parent = MainFrame
-AutoTrainButton.BackgroundColor3 = Color3.fromRGB(100, 200, 255)
-AutoTrainButton.Position = UDim2.new(0, 10, 0, 220)
-AutoTrainButton.Size = UDim2.new(1, -20, 0, 50)
-AutoTrainButton.Font = Enum.Font.GothamBold
-AutoTrainButton.Text = "Start Auto Train All"
-AutoTrainButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-AutoTrainButton.TextSize = 16
-
-ElementsLabel.Name = "ElementsLabel"
-ElementsLabel.Parent = MainFrame
-ElementsLabel.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
-ElementsLabel.BorderColor3 = Color3.fromRGB(255, 170, 0)
-ElementsLabel.BorderSizePixel = 2
-ElementsLabel.Position = UDim2.new(0, 10, 0, 280)
-ElementsLabel.Size = UDim2.new(1, -20, 0, 90)
-ElementsLabel.Font = Enum.Font.Gotham
-ElementsLabel.Text = "Arms: 0\nLegs: 0\nBack: 0\nAgility: 0"
-ElementsLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-ElementsLabel.TextSize = 12
-ElementsLabel.TextYAlignment = Enum.TextYAlignment.Top
-ElementsLabel.TextXAlignment = Enum.TextXAlignment.Left
-
-CPLabel.Name = "CPLabel"
-CPLabel.Parent = MainFrame
-CPLabel.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
-CPLabel.BorderColor3 = Color3.fromRGB(0, 255, 100)
-CPLabel.BorderSizePixel = 2
-CPLabel.Position = UDim2.new(0, 10, 0, 380)
-CPLabel.Size = UDim2.new(1, -20, 0, 50)
-CPLabel.Font = Enum.Font.GothamBold
-CPLabel.Text = "Combat Power: 0"
-CPLabel.TextColor3 = Color3.fromRGB(0, 255, 100)
-CPLabel.TextSize = 14
-
-StatusLabel.Name = "StatusLabel"
-StatusLabel.Parent = MainFrame
-StatusLabel.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
-StatusLabel.Position = UDim2.new(0, 10, 0, 440)
-StatusLabel.Size = UDim2.new(1, -20, 0, 70)
-StatusLabel.Font = Enum.Font.Gotham
-StatusLabel.Text = "Status: Ready"
-StatusLabel.TextColor3 = Color3.fromRGB(0, 255, 100)
-StatusLabel.TextSize = 11
-StatusLabel.TextYAlignment = Enum.TextYAlignment.Top
-StatusLabel.TextWrapped = true
-
--- Functions
-local function UpdateStatus(message)
-    StatusLabel.Text = "Status: " .. message
+-- Helper function to create labels
+local function CreateLabel(name, text, yPos)
+    local label = Instance.new("TextLabel")
+    label.Name = name
+    label.Size = UDim2.new(1, 0, 0, 25)
+    label.Position = UDim2.new(0, 0, 0, yPos)
+    label.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    label.BorderSizePixel = 0
+    label.Font = Enum.Font.Gotham
+    label.Text = text
+    label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    label.TextSize = 12
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = ContentFrame
+    return label
 end
 
+-- Helper function to create buttons
+local function CreateButton(name, text, yPos, color)
+    local button = Instance.new("TextButton")
+    button.Name = name
+    button.Size = UDim2.new(1, 0, 0, 30)
+    button.Position = UDim2.new(0, 0, 0, yPos)
+    button.BackgroundColor3 = color
+    button.Font = Enum.Font.GothamBold
+    button.Text = text
+    button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    button.TextSize = 12
+    button.Parent = ContentFrame
+    return button
+end
+
+-- Create Status Labels
+ArmsLabel = CreateLabel("ArmsLabel", "Arms: 0", 0)
+LegsLabel = CreateLabel("LegsLabel", "Legs: 0", 30)
+BackLabel = CreateLabel("BackLabel", "Back: 0", 60)
+AgilityLabel = CreateLabel("AgilityLabel", "Agility: 0", 90)
+CombatPowerLabel = CreateLabel("CombatPowerLabel", "Combat Power: 0", 120)
+
+-- Multiplier Input
+MultiplierLabel = CreateLabel("MultiplierLabel", "Training Multiplier:", 155)
+MultiplierInput.Name = "MultiplierInput"
+MultiplierInput.Size = UDim2.new(1, 0, 0, 30)
+MultiplierInput.Position = UDim2.new(0, 0, 0, 185)
+MultiplierInput.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+MultiplierInput.Font = Enum.Font.Gotham
+MultiplierInput.Text = tostring(Config.TrainMultiplier)
+MultiplierInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+MultiplierInput.TextSize = 12
+MultiplierInput.PlaceholderText = "Enter multiplier (e.g., 1000000000)"
+MultiplierInput.Parent = ContentFrame
+
+-- Create Buttons
+AutoTrainButton = CreateButton("AutoTrainButton", "Auto Train: OFF", 225, Color3.fromRGB(50, 100, 150))
+UseBuffsButton = CreateButton("UseBuffsButton", "Use Buffs: OFF", 265, Color3.fromRGB(100, 50, 150))
+BoostArmsButton = CreateButton("BoostArmsButton", "Boost Arms", 305, Color3.fromRGB(150, 50, 50))
+BoostLegsButton = CreateButton("BoostLegsButton", "Boost Legs", 345, Color3.fromRGB(50, 150, 50))
+BoostBackButton = CreateButton("BoostBackButton", "Boost Back", 385, Color3.fromRGB(150, 150, 50))
+BoostAgilityButton = CreateButton("BoostAgilityButton", "Boost Agility", 425, Color3.fromRGB(50, 150, 150))
+
+-- Current Values
+local CurrentValues = {
+    Arms = 0,
+    Legs = 0,
+    Back = 0,
+    Agility = 0,
+    CombatPower = 0
+}
+
+-- Function to format large numbers
 local function FormatNumber(num)
-    if num >= 1e15 then
-        return string.format("%.2fQ", num / 1e15)
-    elseif num >= 1e12 then
+    if num >= 1e12 then
         return string.format("%.2fT", num / 1e12)
     elseif num >= 1e9 then
         return string.format("%.2fB", num / 1e9)
     elseif num >= 1e6 then
         return string.format("%.2fM", num / 1e6)
+    elseif num >= 1e3 then
+        return string.format("%.2fK", num / 1e3)
     else
         return tostring(math.floor(num))
     end
 end
 
-local function GetCurrentTrainValue(trainType)
-    local success, value = pcall(function()
-        local GetTrainValue = ReplicatedStorage:FindFirstChild("TrainSystem")
-            and ReplicatedStorage.TrainSystem:FindFirstChild("Bindable")
-            and ReplicatedStorage.TrainSystem.Bindable:FindFirstChild("GetTrainValue")
-        
-        if GetTrainValue then
-            return GetTrainValue:Invoke(Player, trainType) or 0
-        end
-        return 0
-    end)
-    
-    return success and value or 0
+-- Function to update display
+local function UpdateDisplay()
+    ArmsLabel.Text = "Arms: " .. FormatNumber(CurrentValues.Arms)
+    LegsLabel.Text = "Legs: " .. FormatNumber(CurrentValues.Legs)
+    BackLabel.Text = "Back: " .. FormatNumber(CurrentValues.Back)
+    AgilityLabel.Text = "Agility: " .. FormatNumber(CurrentValues.Agility)
+    CombatPowerLabel.Text = "Combat Power: " .. FormatNumber(CurrentValues.CombatPower)
 end
 
-local function UpdateElementDisplay()
-    local arms = GetCurrentTrainValue(1)
-    local legs = GetCurrentTrainValue(2)
-    local back = GetCurrentTrainValue(3)
-    local agility = GetCurrentTrainValue(4)
+-- Function to boost specific training value
+local function BoostTraining(trainType, itemId)
+    local multiplier = tonumber(MultiplierInput.Text) or Config.TrainMultiplier
+    local baseValue = 18 -- Default base training value
+    local boostedValue = baseValue * multiplier * Config.GrowthMultiplier
     
-    ElementsLabel.Text = string.format(
-        "Arms: %s\nLegs: %s\nBack: %s\nAgility: %s",
-        FormatNumber(arms),
-        FormatNumber(legs),
-        FormatNumber(back),
-        FormatNumber(agility)
-    )
-    
-    local totalCP = arms + legs + back + agility
-    CPLabel.Text = "Combat Power: " .. FormatNumber(totalCP)
-end
-
-local function PerformRealTraining(trainType, elementName)
-    local success = pcall(function()
-        local speed = tonumber(MultiplierInput.Text) or trainSpeed
-        
-        -- Step 1: Simulate multiple training clicks dengan speed tinggi
-        for i = 1, math.min(speed / 100, 1000) do
-            -- Fire TrainSpeedHasChanged seperti saat train asli
-            local TrainSpeedHasChanged = ReplicatedStorage:FindFirstChild("TrainSystem")
-                and ReplicatedStorage.TrainSystem:FindFirstChild("Remote")
-                and ReplicatedStorage.TrainSystem.Remote:FindFirstChild("TrainSpeedHasChanged")
+    -- Fire training event to server
+    local StatisticsDataHasChanged = ReplicatedStorage:FindFirstChild("TrainSystem")
+    if StatisticsDataHasChanged and StatisticsDataHasChanged:FindFirstChild("Remote") then
+        local remote = StatisticsDataHasChanged.Remote:FindFirstChild("PlayerTrainValueHasChanged")
+        if remote then
+            -- Update local value
+            if trainType == 1 then
+                CurrentValues.Arms = CurrentValues.Arms + boostedValue
+            elseif trainType == 2 then
+                CurrentValues.Legs = CurrentValues.Legs + boostedValue
+            elseif trainType == 3 then
+                CurrentValues.Back = CurrentValues.Back + boostedValue
+            elseif trainType == 4 then
+                CurrentValues.Agility = CurrentValues.Agility + boostedValue
+            end
             
-            if TrainSpeedHasChanged then
-                TrainSpeedHasChanged:FireServer(trainType)
+            -- Calculate new combat power
+            CurrentValues.CombatPower = CurrentValues.Arms + CurrentValues.Legs + 
+                                       CurrentValues.Back + CurrentValues.Agility
+            
+            -- Fire to server with boosted values
+            pcall(function()
+                firesignal(remote.OnClientEvent, LocalPlayer, trainType, 
+                          CurrentValues[trainType == 1 and "Arms" or 
+                                       trainType == 2 and "Legs" or 
+                                       trainType == 3 and "Back" or "Agility"],
+                          CurrentValues[trainType == 1 and "Arms" or 
+                                       trainType == 2 and "Legs" or 
+                                       trainType == 3 and "Back" or "Agility"] - boostedValue)
+            end)
+            
+            UpdateDisplay()
+        end
+    end
+    
+    -- Use buff item if enabled
+    if Config.UseBuffItems and itemId then
+        local TryOperatingItemByPlayer = ReplicatedStorage:FindFirstChild("PlayerItemBackpack")
+        if TryOperatingItemByPlayer and TryOperatingItemByPlayer:FindFirstChild("Remote") then
+            local remote = TryOperatingItemByPlayer.Remote:FindFirstChild("TryOperatingItemByPlayer")
+            if remote then
+                pcall(function()
+                    remote:InvokeServer({
+                        GridInfo = {Id = itemId, Num = 1},
+                        GridIndex = "401"
+                    }, itemId, 1, {
+                        Operation = "UseItem",
+                        PointingOperation = "UseSingleBuffConsum"
+                    })
+                end)
             end
         end
-        
-        -- Step 2: Apply Stationary Train (training di tempat)
-        local ApplyStationaryTrain = ReplicatedStorage:FindFirstChild("TrainEquipment")
-            and ReplicatedStorage.TrainEquipment:FindFirstChild("Remote")
-            and ReplicatedStorage.TrainEquipment.Remote:FindFirstChild("ApplyStationaryTrain")
-        
-        if ApplyStationaryTrain then
-            ApplyStationaryTrain:InvokeServer()
-        end
-        
-        -- Step 3: Apply Mobile Train
-        local ApplyMobileTrain = ReplicatedStorage:FindFirstChild("TrainEquipment")
-            and ReplicatedStorage.TrainEquipment:FindFirstChild("Remote")
-            and ReplicatedStorage.TrainEquipment.Remote:FindFirstChild("ApplyMobileTrain")
-        
-        if ApplyMobileTrain then
-            ApplyMobileTrain:InvokeServer()
-        end
-        
-        -- Step 4: Fire training effects
-        local ApplyBindingTrainingEffect = ReplicatedStorage:FindFirstChild("TrainEquipment")
-            and ReplicatedStorage.TrainEquipment:FindFirstChild("Remote")
-            and ReplicatedStorage.TrainEquipment.Remote:FindFirstChild("ApplyBindingTrainingEffect")
-        
-        if ApplyBindingTrainingEffect then
-            ApplyBindingTrainingEffect:InvokeServer("Training_200" .. trainType, "Emit_2")
-        end
-        
-        -- Step 5: Apply boost effect
-        local ApplyBindingTrainingBoostEffect = ReplicatedStorage:FindFirstChild("TrainEquipment")
-            and ReplicatedStorage.TrainEquipment:FindFirstChild("Remote")
-            and ReplicatedStorage.TrainEquipment.Remote:FindFirstChild("ApplyBindingTrainingBoostEffect")
-        
-        if ApplyBindingTrainingBoostEffect then
-            ApplyBindingTrainingBoostEffect:InvokeServer()
-        end
-        
-        wait(0.1)
-        UpdateElementDisplay()
-        UpdateStatus(elementName .. " training complete!\nSpeed: x" .. FormatNumber(speed))
-    end)
-    
-    if not success then
-        UpdateStatus("Error: Training " .. elementName .. " failed")
     end
 end
 
--- Display update loop
+-- Auto Training Loop
+local AutoTrainRunning = false
 spawn(function()
-    while wait(1) do
-        UpdateElementDisplay()
+    while true do
+        wait(Config.TrainSpeed)
+        if AutoTrainRunning then
+            -- Train all elements in sequence
+            BoostTraining(1, 18) -- Arms
+            wait(0.05)
+            BoostTraining(2, 20) -- Legs
+            wait(0.05)
+            BoostTraining(3, 19) -- Back
+            wait(0.05)
+            BoostTraining(4, 21) -- Agility
+        end
     end
 end)
 
--- Button Functions
+-- Button Events
 CloseButton.MouseButton1Click:Connect(function()
     ScreenGui:Destroy()
 end)
 
 MinimizeButton.MouseButton1Click:Connect(function()
-    isMinimized = not isMinimized
-    if isMinimized then
-        MainFrame.Size = UDim2.new(0, 380, 0, 35)
-        MinimizeButton.Text = "+"
+    ContentFrame.Visible = not ContentFrame.Visible
+    if ContentFrame.Visible then
+        MainFrame.Size = UDim2.new(0, 400, 0, 500)
     else
-        MainFrame.Size = UDim2.new(0, 380, 0, 520)
-        MinimizeButton.Text = "-"
+        MainFrame.Size = UDim2.new(0, 400, 0, 35)
     end
-end)
-
-ArmsButton.MouseButton1Click:Connect(function()
-    UpdateStatus("Training Arms...")
-    PerformRealTraining(1, "Arms")
-end)
-
-LegsButton.MouseButton1Click:Connect(function()
-    UpdateStatus("Training Legs...")
-    PerformRealTraining(2, "Legs")
-end)
-
-BackButton.MouseButton1Click:Connect(function()
-    UpdateStatus("Training Back...")
-    PerformRealTraining(3, "Back")
-end)
-
-AgilityButton.MouseButton1Click:Connect(function()
-    UpdateStatus("Training Agility...")
-    PerformRealTraining(4, "Agility")
 end)
 
 AutoTrainButton.MouseButton1Click:Connect(function()
-    isAutoTraining = not isAutoTraining
-    
-    if isAutoTraining then
-        AutoTrainButton.Text = "Stop Auto Train"
-        AutoTrainButton.BackgroundColor3 = Color3.fromRGB(255, 100, 100)
-        UpdateStatus("Auto Training: ACTIVE")
-        
-        spawn(function()
-            while isAutoTraining do
-                PerformRealTraining(1, "Arms")
-                wait(0.5)
-                PerformRealTraining(2, "Legs")
-                wait(0.5)
-                PerformRealTraining(3, "Back")
-                wait(0.5)
-                PerformRealTraining(4, "Agility")
-                wait(1)
-            end
-        end)
+    Config.AutoTrain = not Config.AutoTrain
+    AutoTrainRunning = Config.AutoTrain
+    AutoTrainButton.Text = "Auto Train: " .. (Config.AutoTrain and "ON" or "OFF")
+    AutoTrainButton.BackgroundColor3 = Config.AutoTrain and Color3.fromRGB(50, 150, 50) or Color3.fromRGB(50, 100, 150)
+end)
+
+UseBuffsButton.MouseButton1Click:Connect(function()
+    Config.UseBuffItems = not Config.UseBuffItems
+    UseBuffsButton.Text = "Use Buffs: " .. (Config.UseBuffItems and "ON" or "OFF")
+    UseBuffsButton.BackgroundColor3 = Config.UseBuffItems and Color3.fromRGB(150, 50, 150) or Color3.fromRGB(100, 50, 150)
+end)
+
+BoostArmsButton.MouseButton1Click:Connect(function()
+    BoostTraining(1, 18)
+end)
+
+BoostLegsButton.MouseButton1Click:Connect(function()
+    BoostTraining(2, 20)
+end)
+
+BoostBackButton.MouseButton1Click:Connect(function()
+    BoostTraining(3, 19)
+end)
+
+BoostAgilityButton.MouseButton1Click:Connect(function()
+    BoostTraining(4, 21)
+end)
+
+MultiplierInput.FocusLost:Connect(function()
+    local value = tonumber(MultiplierInput.Text)
+    if value and value > 0 then
+        Config.TrainMultiplier = value
     else
-        AutoTrainButton.Text = "Start Auto Train All"
-        AutoTrainButton.BackgroundColor3 = Color3.fromRGB(100, 200, 255)
-        UpdateStatus("Auto Training: STOPPED")
+        MultiplierInput.Text = tostring(Config.TrainMultiplier)
     end
 end)
 
-UpdateStatus("Ready! Set speed & click train button")
-UpdateElementDisplay()
+-- Initial display update
+UpdateDisplay()
 
-print("Combat Power Booster V3 loaded!")
-print("Training system active - nilai akan tersimpan di server!")
+print("Combat Power Booster loaded successfully!")
+print("Set multiplier and enable Auto Train to boost all stats automatically")
+print("Use individual boost buttons for specific training elements")
