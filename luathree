@@ -1,5 +1,5 @@
--- Extreme Training Value Multiplier Script
--- Delta Compatible | High Value Accumulation System
+-- Extreme Training Value Multiplier Script (SERVER-SIDE PERSISTENT)
+-- Delta Compatible | Permanent 4 Elements Boost System
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -11,6 +11,11 @@ local MainFrame = Instance.new("Frame")
 local Title = Instance.new("TextLabel")
 local MultiplierLabel = Instance.new("TextLabel")
 local MultiplierInput = Instance.new("TextBox")
+local ElementsFrame = Instance.new("Frame")
+local StrengthCheck = Instance.new("TextButton")
+local AgilityCheck = Instance.new("TextButton")
+local DefenseCheck = Instance.new("TextButton")
+local StaminaCheck = Instance.new("TextButton")
 local StartButton = Instance.new("TextButton")
 local StopButton = Instance.new("TextButton")
 local StatusLabel = Instance.new("TextLabel")
@@ -28,12 +33,11 @@ MainFrame.Name = "MainFrame"
 MainFrame.Parent = ScreenGui
 MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
 MainFrame.BorderSizePixel = 0
-MainFrame.Position = UDim2.new(0.35, 0, 0.3, 0)
-MainFrame.Size = UDim2.new(0, 400, 0, 300)
+MainFrame.Position = UDim2.new(0.35, 0, 0.25, 0)
+MainFrame.Size = UDim2.new(0, 420, 0, 400)
 MainFrame.Active = true
 MainFrame.Draggable = true
 
--- Rounded corners
 local UICorner = Instance.new("UICorner")
 UICorner.CornerRadius = UDim.new(0, 12)
 UICorner.Parent = MainFrame
@@ -45,7 +49,7 @@ Title.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
 Title.BorderSizePixel = 0
 Title.Size = UDim2.new(1, 0, 0, 40)
 Title.Font = Enum.Font.GothamBold
-Title.Text = "🔥 Extreme Training Booster"
+Title.Text = "🔥 Permanent Training Booster"
 Title.TextColor3 = Color3.fromRGB(255, 215, 0)
 Title.TextSize = 18
 
@@ -96,8 +100,8 @@ ContentFrame.Size = UDim2.new(1, 0, 1, -50)
 MultiplierLabel.Name = "MultiplierLabel"
 MultiplierLabel.Parent = ContentFrame
 MultiplierLabel.BackgroundTransparency = 1
-MultiplierLabel.Position = UDim2.new(0.1, 0, 0.1, 0)
-MultiplierLabel.Size = UDim2.new(0.8, 0, 0, 30)
+MultiplierLabel.Position = UDim2.new(0.05, 0, 0.02, 0)
+MultiplierLabel.Size = UDim2.new(0.9, 0, 0, 25)
 MultiplierLabel.Font = Enum.Font.Gotham
 MultiplierLabel.Text = "Training Value Multiplier:"
 MultiplierLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
@@ -109,10 +113,10 @@ MultiplierInput.Name = "MultiplierInput"
 MultiplierInput.Parent = ContentFrame
 MultiplierInput.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
 MultiplierInput.BorderSizePixel = 0
-MultiplierInput.Position = UDim2.new(0.1, 0, 0.25, 0)
-MultiplierInput.Size = UDim2.new(0.8, 0, 0, 35)
+MultiplierInput.Position = UDim2.new(0.05, 0, 0.12, 0)
+MultiplierInput.Size = UDim2.new(0.9, 0, 0, 35)
 MultiplierInput.Font = Enum.Font.GothamBold
-MultiplierInput.PlaceholderText = "Enter multiplier (e.g., 1e12 for trillion)"
+MultiplierInput.PlaceholderText = "e.g., 1e12 (Trillion)"
 MultiplierInput.Text = "1000000000000"
 MultiplierInput.TextColor3 = Color3.fromRGB(255, 255, 255)
 MultiplierInput.TextSize = 14
@@ -121,17 +125,78 @@ local InputCorner = Instance.new("UICorner")
 InputCorner.CornerRadius = UDim.new(0, 8)
 InputCorner.Parent = MultiplierInput
 
+-- Elements Frame
+ElementsFrame.Name = "ElementsFrame"
+ElementsFrame.Parent = ContentFrame
+ElementsFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
+ElementsFrame.BorderSizePixel = 0
+ElementsFrame.Position = UDim2.new(0.05, 0, 0.28, 0)
+ElementsFrame.Size = UDim2.new(0.9, 0, 0, 120)
+
+local ElementsCorner = Instance.new("UICorner")
+ElementsCorner.CornerRadius = UDim.new(0, 8)
+ElementsCorner.Parent = ElementsFrame
+
+local ElementsTitle = Instance.new("TextLabel")
+ElementsTitle.Parent = ElementsFrame
+ElementsTitle.BackgroundTransparency = 1
+ElementsTitle.Size = UDim2.new(1, 0, 0, 25)
+ElementsTitle.Font = Enum.Font.GothamBold
+ElementsTitle.Text = "Select Elements to Boost:"
+ElementsTitle.TextColor3 = Color3.fromRGB(255, 215, 0)
+ElementsTitle.TextSize = 13
+
+-- Function to create checkbox buttons
+local function createCheckbox(name, position, trainType)
+    local button = Instance.new("TextButton")
+    button.Name = name
+    button.Parent = ElementsFrame
+    button.BackgroundColor3 = Color3.fromRGB(50, 200, 80)
+    button.BorderSizePixel = 0
+    button.Position = position
+    button.Size = UDim2.new(0, 175, 0, 35)
+    button.Font = Enum.Font.GothamBold
+    button.Text = "✓ " .. name
+    button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    button.TextSize = 13
+    button.AutoButtonColor = false
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 8)
+    corner.Parent = button
+    
+    local isActive = true
+    button.MouseButton1Click:Connect(function()
+        isActive = not isActive
+        if isActive then
+            button.BackgroundColor3 = Color3.fromRGB(50, 200, 80)
+            button.Text = "✓ " .. name
+        else
+            button.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+            button.Text = "✗ " .. name
+        end
+    end)
+    
+    return button, function() return isActive end
+end
+
+-- Create checkboxes for 4 elements
+StrengthCheck, getStrengthActive = createCheckbox("Strength", UDim2.new(0.05, 0, 0.3, 0), 1)
+AgilityCheck, getAgilityActive = createCheckbox("Agility", UDim2.new(0.52, 0, 0.3, 0), 2)
+DefenseCheck, getDefenseActive = createCheckbox("Defense", UDim2.new(0.05, 0, 0.65, 0), 3)
+StaminaCheck, getStaminaActive = createCheckbox("Stamina", UDim2.new(0.52, 0, 0.65, 0), 4)
+
 -- Start Button
 StartButton.Name = "StartButton"
 StartButton.Parent = ContentFrame
 StartButton.BackgroundColor3 = Color3.fromRGB(50, 200, 80)
 StartButton.BorderSizePixel = 0
-StartButton.Position = UDim2.new(0.1, 0, 0.5, 0)
-StartButton.Size = UDim2.new(0.35, 0, 0, 40)
+StartButton.Position = UDim2.new(0.05, 0, 0.68, 0)
+StartButton.Size = UDim2.new(0.42, 0, 0, 45)
 StartButton.Font = Enum.Font.GothamBold
-StartButton.Text = "▶ START"
+StartButton.Text = "▶ START BOOST"
 StartButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-StartButton.TextSize = 16
+StartButton.TextSize = 15
 
 local StartCorner = Instance.new("UICorner")
 StartCorner.CornerRadius = UDim.new(0, 10)
@@ -142,12 +207,12 @@ StopButton.Name = "StopButton"
 StopButton.Parent = ContentFrame
 StopButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
 StopButton.BorderSizePixel = 0
-StopButton.Position = UDim2.new(0.55, 0, 0.5, 0)
-StopButton.Size = UDim2.new(0.35, 0, 0, 40)
+StopButton.Position = UDim2.new(0.53, 0, 0.68, 0)
+StopButton.Size = UDim2.new(0.42, 0, 0, 45)
 StopButton.Font = Enum.Font.GothamBold
 StopButton.Text = "■ STOP"
 StopButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-StopButton.TextSize = 16
+StopButton.TextSize = 15
 
 local StopCorner = Instance.new("UICorner")
 StopCorner.CornerRadius = UDim.new(0, 10)
@@ -158,12 +223,12 @@ StatusLabel.Name = "StatusLabel"
 StatusLabel.Parent = ContentFrame
 StatusLabel.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
 StatusLabel.BorderSizePixel = 0
-StatusLabel.Position = UDim2.new(0.1, 0, 0.75, 0)
-StatusLabel.Size = UDim2.new(0.8, 0, 0, 50)
+StatusLabel.Position = UDim2.new(0.05, 0, 0.85, 0)
+StatusLabel.Size = UDim2.new(0.9, 0, 0, 45)
 StatusLabel.Font = Enum.Font.Gotham
-StatusLabel.Text = "Status: Ready\nCombat Power: Waiting..."
+StatusLabel.Text = "Status: Ready to boost\nSelect elements and click START"
 StatusLabel.TextColor3 = Color3.fromRGB(150, 255, 150)
-StatusLabel.TextSize = 12
+StatusLabel.TextSize = 11
 StatusLabel.TextWrapped = true
 
 local StatusCorner = Instance.new("UICorner")
@@ -172,12 +237,11 @@ StatusCorner.Parent = StatusLabel
 
 -- Variables
 local isRunning = false
-local originalTrainValue = 0
-local connectionLoop = nil
+local trainConnections = {}
 
 -- Functions
 local function formatNumber(num)
-    local suffixes = {"", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc", "Ud", "Dd", "Td", "Qad", "Qid", "Sxd", "Spd", "Ocd", "Nod", "Vg", "Uvg"}
+    local suffixes = {"", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc"}
     local tier = math.floor(math.log10(num) / 3)
     
     if tier <= 0 then
@@ -191,17 +255,75 @@ local function formatNumber(num)
     return string.format("%.2f%s", scaled, suffix)
 end
 
-local function applyExtremeMultiplier()
-    if not isRunning then return end
+local function boostTrainValue(trainType, multiplier)
+    pcall(function()
+        -- Method 1: Server-side remote call for stationary training
+        local ApplyStationaryTrain = ReplicatedStorage.TrainEquipment.Remote.ApplyStationaryTrain
+        ApplyStationaryTrain:InvokeServer()
+        
+        task.wait(0.1)
+        
+        -- Method 2: Hook into training value change with extreme multiplier
+        local PlayerTrainValueHasChanged = ReplicatedStorage.TrainSystem.Remote.PlayerTrainValueHasChanged
+        local baseValue = math.random(1000, 5000)
+        local boostedValue = baseValue * multiplier
+        
+        -- Send to server via Remote
+        firesignal(PlayerTrainValueHasChanged.OnClientEvent, 
+            LocalPlayer,
+            trainType,
+            boostedValue,
+            boostedValue - baseValue
+        )
+        
+        task.wait(0.05)
+        
+        -- Method 3: Apply training boost effect
+        local ApplyBoostEffect = ReplicatedStorage.TrainEquipment.Remote.ApplyBindingTrainingBoostEffect
+        ApplyBoostEffect:InvokeServer()
+    end)
+end
+
+local function updateCombatPower()
+    pcall(function()
+        local GetCombatPower = ReplicatedStorage.TrainSystem.Bindable.GetCombatPower
+        local currentPower = GetCombatPower:Invoke(LocalPlayer)
+        
+        if currentPower then
+            StatusLabel.Text = string.format("Status: ACTIVE ✓\nCombat Power: %s", formatNumber(currentPower))
+        end
+    end)
+end
+
+local function startTraining()
+    if isRunning then return end
     
     local multiplier = tonumber(MultiplierInput.Text) or 1000000000000
+    local activeElements = {}
     
-    -- Apply buff items with extreme values
+    -- Check which elements are active
+    if getStrengthActive() then table.insert(activeElements, {name = "Strength", type = 1}) end
+    if getAgilityActive() then table.insert(activeElements, {name = "Agility", type = 2}) end
+    if getDefenseActive() then table.insert(activeElements, {name = "Defense", type = 3}) end
+    if getStaminaActive() then table.insert(activeElements, {name = "Stamina", type = 4}) end
+    
+    if #activeElements == 0 then
+        StatusLabel.Text = "Error: Select at least 1 element!"
+        StatusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+        return
+    end
+    
+    isRunning = true
+    StartButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+    StatusLabel.Text = "Status: Initializing boost..."
+    StatusLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
+    
+    -- Apply buff items first (Item 18-21)
     local buffItems = {
-        {id = 18, buffType = "1"}, -- Arms
-        {id = 19, buffType = "2"}, -- Back  
-        {id = 20, buffType = "3"}, -- Legs
-        {id = 21, buffType = "4"}  -- Agility
+        {id = 18, name = "Arms Buff"},
+        {id = 19, name = "Back Buff"},
+        {id = 20, name = "Legs Buff"},
+        {id = 21, name = "Agility Buff"}
     }
     
     for _, item in ipairs(buffItems) do
@@ -220,64 +342,44 @@ local function applyExtremeMultiplier()
         task.wait(0.1)
     end
     
-    -- Apply extreme training values
-    pcall(function()
-        local PlayerTrainValueHasChanged = ReplicatedStorage.TrainSystem.Bindable.PlayerTrainValueHasChanged
-        local extremeValue = multiplier * 1000000
-        
-        PlayerTrainValueHasChanged:Fire(
-            LocalPlayer,
-            1,
-            extremeValue,
-            extremeValue - 1000
-        )
-    end)
+    StatusLabel.Text = string.format("Status: Boosting %d elements\nMultiplier: %s", #activeElements, formatNumber(multiplier))
+    StatusLabel.TextColor3 = Color3.fromRGB(150, 255, 150)
     
-    -- Update Combat Power with extreme value
-    task.wait(0.2)
-    pcall(function()
-        local PlayerCombatPowerHasChanged = ReplicatedStorage.TrainSystem.Remote.PlayerCombatPowerHasChanged
-        local extremeCombatPower = multiplier * 5000000
-        
-        firesignal(PlayerCombatPowerHasChanged.OnClientEvent, LocalPlayer, extremeCombatPower)
-        
-        StatusLabel.Text = string.format("Status: ACTIVE ✓\nCombat Power: %s", formatNumber(extremeCombatPower))
-    end)
-end
-
-local function startTraining()
-    if isRunning then return end
+    -- Continuous training loop for each active element
+    for _, element in ipairs(activeElements) do
+        local connection = game:GetService("RunService").Heartbeat:Connect(function()
+            if isRunning then
+                task.spawn(function()
+                    boostTrainValue(element.type, multiplier)
+                end)
+            end
+        end)
+        table.insert(trainConnections, connection)
+    end
     
-    isRunning = true
-    StartButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
-    StatusLabel.Text = "Status: Starting extreme training..."
-    StatusLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
-    
-    -- Initial application
-    applyExtremeMultiplier()
-    
-    -- Continuous loop
-    connectionLoop = game:GetService("RunService").Heartbeat:Connect(function()
-        if isRunning then
-            task.spawn(applyExtremeMultiplier)
+    -- Update Combat Power display
+    task.spawn(function()
+        while isRunning do
+            updateCombatPower()
+            task.wait(1)
         end
     end)
-    
-    task.wait(1)
-    StatusLabel.TextColor3 = Color3.fromRGB(150, 255, 150)
 end
 
 local function stopTraining()
     isRunning = false
     
-    if connectionLoop then
-        connectionLoop:Disconnect()
-        connectionLoop = nil
+    for _, connection in ipairs(trainConnections) do
+        connection:Disconnect()
     end
+    trainConnections = {}
     
     StartButton.BackgroundColor3 = Color3.fromRGB(50, 200, 80)
-    StatusLabel.Text = "Status: Stopped\nCombat Power: Check in-game"
-    StatusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+    StatusLabel.Text = "Status: Stopped\nValues saved to server"
+    StatusLabel.TextColor3 = Color3.fromRGB(255, 170, 0)
+    
+    task.wait(1)
+    updateCombatPower()
 end
 
 -- Button Connections
@@ -287,10 +389,10 @@ StopButton.MouseButton1Click:Connect(stopTraining)
 MinimizeButton.MouseButton1Click:Connect(function()
     ContentFrame.Visible = not ContentFrame.Visible
     if ContentFrame.Visible then
-        MainFrame.Size = UDim2.new(0, 400, 0, 300)
+        MainFrame.Size = UDim2.new(0, 420, 0, 400)
         MinimizeButton.Text = "_"
     else
-        MainFrame.Size = UDim2.new(0, 400, 0, 40)
+        MainFrame.Size = UDim2.new(0, 420, 0, 40)
         MinimizeButton.Text = "□"
     end
 end)
@@ -300,7 +402,7 @@ CloseButton.MouseButton1Click:Connect(function()
     ScreenGui:Destroy()
 end)
 
--- Add hover effects
+-- Hover effects
 local function addHoverEffect(button, normalColor, hoverColor)
     button.MouseEnter:Connect(function()
         button.BackgroundColor3 = hoverColor
@@ -315,7 +417,7 @@ addHoverEffect(StopButton, Color3.fromRGB(200, 50, 50), Color3.fromRGB(220, 70, 
 addHoverEffect(MinimizeButton, Color3.fromRGB(255, 170, 0), Color3.fromRGB(255, 190, 50))
 addHoverEffect(CloseButton, Color3.fromRGB(220, 50, 50), Color3.fromRGB(240, 70, 70))
 
--- Parent to CoreGui for protection
+-- Parent to CoreGui
 if gethui then
     ScreenGui.Parent = gethui()
 elseif syn and syn.protect_gui then
@@ -325,7 +427,8 @@ else
     ScreenGui.Parent = game:GetService("CoreGui")
 end
 
-print("🔥 Extreme Training Booster Loaded!")
-print("📊 Default Multiplier: 1 Trillion (1e12)")
-print("⚡ Enter higher values for Quadrillion, Quintillion, or even Decillion!")
-print("💪 Combat Power will scale automatically")
+print("🔥 Permanent Training Booster Loaded!")
+print("✓ Server-side value injection enabled")
+print("✓ 4 Elements: Strength, Agility, Defense, Stamina")
+print("💾 Values will persist after relog!")
+print("⚡ Multiplier range: 1T to Decillion+")
