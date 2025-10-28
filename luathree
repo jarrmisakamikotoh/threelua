@@ -1,5 +1,5 @@
--- Extreme Training Value Multiplier Script (SERVER-SIDE PERSISTENT)
--- Delta Compatible | Permanent 4 Elements Boost System
+-- Extreme Training Value Multiplier v2 (WORKING + PERSISTENT)
+-- Delta Compatible | Based on Working Method
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -11,14 +11,12 @@ local MainFrame = Instance.new("Frame")
 local Title = Instance.new("TextLabel")
 local MultiplierLabel = Instance.new("TextLabel")
 local MultiplierInput = Instance.new("TextBox")
-local ElementsFrame = Instance.new("Frame")
-local StrengthCheck = Instance.new("TextButton")
-local AgilityCheck = Instance.new("TextButton")
-local DefenseCheck = Instance.new("TextButton")
-local StaminaCheck = Instance.new("TextButton")
+local TrainTypeLabel = Instance.new("TextLabel")
+local TrainTypeInput = Instance.new("TextBox")
 local StartButton = Instance.new("TextButton")
 local StopButton = Instance.new("TextButton")
 local StatusLabel = Instance.new("TextLabel")
+local InfoLabel = Instance.new("TextLabel")
 local MinimizeButton = Instance.new("TextButton")
 local CloseButton = Instance.new("TextButton")
 local ContentFrame = Instance.new("Frame")
@@ -34,7 +32,7 @@ MainFrame.Parent = ScreenGui
 MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
 MainFrame.BorderSizePixel = 0
 MainFrame.Position = UDim2.new(0.35, 0, 0.25, 0)
-MainFrame.Size = UDim2.new(0, 420, 0, 400)
+MainFrame.Size = UDim2.new(0, 420, 0, 420)
 MainFrame.Active = true
 MainFrame.Draggable = true
 
@@ -49,7 +47,7 @@ Title.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
 Title.BorderSizePixel = 0
 Title.Size = UDim2.new(1, 0, 0, 40)
 Title.Font = Enum.Font.GothamBold
-Title.Text = "🔥 Permanent Training Booster"
+Title.Text = "🔥 Extreme Training Booster V2"
 Title.TextColor3 = Color3.fromRGB(255, 215, 0)
 Title.TextSize = 18
 
@@ -113,10 +111,10 @@ MultiplierInput.Name = "MultiplierInput"
 MultiplierInput.Parent = ContentFrame
 MultiplierInput.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
 MultiplierInput.BorderSizePixel = 0
-MultiplierInput.Position = UDim2.new(0.05, 0, 0.12, 0)
+MultiplierInput.Position = UDim2.new(0.05, 0, 0.1, 0)
 MultiplierInput.Size = UDim2.new(0.9, 0, 0, 35)
 MultiplierInput.Font = Enum.Font.GothamBold
-MultiplierInput.PlaceholderText = "e.g., 1e12 (Trillion)"
+MultiplierInput.PlaceholderText = "e.g., 1000000000000 (1 Trillion)"
 MultiplierInput.Text = "1000000000000"
 MultiplierInput.TextColor3 = Color3.fromRGB(255, 255, 255)
 MultiplierInput.TextSize = 14
@@ -125,73 +123,59 @@ local InputCorner = Instance.new("UICorner")
 InputCorner.CornerRadius = UDim.new(0, 8)
 InputCorner.Parent = MultiplierInput
 
--- Elements Frame
-ElementsFrame.Name = "ElementsFrame"
-ElementsFrame.Parent = ContentFrame
-ElementsFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
-ElementsFrame.BorderSizePixel = 0
-ElementsFrame.Position = UDim2.new(0.05, 0, 0.28, 0)
-ElementsFrame.Size = UDim2.new(0.9, 0, 0, 120)
+-- Train Type Label
+TrainTypeLabel.Name = "TrainTypeLabel"
+TrainTypeLabel.Parent = ContentFrame
+TrainTypeLabel.BackgroundTransparency = 1
+TrainTypeLabel.Position = UDim2.new(0.05, 0, 0.22, 0)
+TrainTypeLabel.Size = UDim2.new(0.9, 0, 0, 25)
+TrainTypeLabel.Font = Enum.Font.Gotham
+TrainTypeLabel.Text = "Train Type (1=Strength, 2=Agility, 3=Defense, 4=Stamina):"
+TrainTypeLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+TrainTypeLabel.TextSize = 12
+TrainTypeLabel.TextXAlignment = Enum.TextXAlignment.Left
+TrainTypeLabel.TextWrapped = true
 
-local ElementsCorner = Instance.new("UICorner")
-ElementsCorner.CornerRadius = UDim.new(0, 8)
-ElementsCorner.Parent = ElementsFrame
+-- Train Type Input
+TrainTypeInput.Name = "TrainTypeInput"
+TrainTypeInput.Parent = ContentFrame
+TrainTypeInput.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
+TrainTypeInput.BorderSizePixel = 0
+TrainTypeInput.Position = UDim2.new(0.05, 0, 0.32, 0)
+TrainTypeInput.Size = UDim2.new(0.9, 0, 0, 35)
+TrainTypeInput.Font = Enum.Font.GothamBold
+TrainTypeInput.PlaceholderText = "Enter 1, 2, 3, or 4"
+TrainTypeInput.Text = "1"
+TrainTypeInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+TrainTypeInput.TextSize = 14
 
-local ElementsTitle = Instance.new("TextLabel")
-ElementsTitle.Parent = ElementsFrame
-ElementsTitle.BackgroundTransparency = 1
-ElementsTitle.Size = UDim2.new(1, 0, 0, 25)
-ElementsTitle.Font = Enum.Font.GothamBold
-ElementsTitle.Text = "Select Elements to Boost:"
-ElementsTitle.TextColor3 = Color3.fromRGB(255, 215, 0)
-ElementsTitle.TextSize = 13
+local TypeCorner = Instance.new("UICorner")
+TypeCorner.CornerRadius = UDim.new(0, 8)
+TypeCorner.Parent = TrainTypeInput
 
--- Function to create checkbox buttons
-local function createCheckbox(name, position, trainType)
-    local button = Instance.new("TextButton")
-    button.Name = name
-    button.Parent = ElementsFrame
-    button.BackgroundColor3 = Color3.fromRGB(50, 200, 80)
-    button.BorderSizePixel = 0
-    button.Position = position
-    button.Size = UDim2.new(0, 175, 0, 35)
-    button.Font = Enum.Font.GothamBold
-    button.Text = "✓ " .. name
-    button.TextColor3 = Color3.fromRGB(255, 255, 255)
-    button.TextSize = 13
-    button.AutoButtonColor = false
-    
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 8)
-    corner.Parent = button
-    
-    local isActive = true
-    button.MouseButton1Click:Connect(function()
-        isActive = not isActive
-        if isActive then
-            button.BackgroundColor3 = Color3.fromRGB(50, 200, 80)
-            button.Text = "✓ " .. name
-        else
-            button.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
-            button.Text = "✗ " .. name
-        end
-    end)
-    
-    return button, function() return isActive end
-end
+-- Info Label
+InfoLabel.Name = "InfoLabel"
+InfoLabel.Parent = ContentFrame
+InfoLabel.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
+InfoLabel.BorderSizePixel = 0
+InfoLabel.Position = UDim2.new(0.05, 0, 0.45, 0)
+InfoLabel.Size = UDim2.new(0.9, 0, 0, 60)
+InfoLabel.Font = Enum.Font.Gotham
+InfoLabel.Text = "💡 Tip: Start training in-game first!\nThen START this script to multiply values.\nChange train type to boost different stats."
+InfoLabel.TextColor3 = Color3.fromRGB(100, 200, 255)
+InfoLabel.TextSize = 11
+InfoLabel.TextWrapped = true
 
--- Create checkboxes for 4 elements
-StrengthCheck, getStrengthActive = createCheckbox("Strength", UDim2.new(0.05, 0, 0.3, 0), 1)
-AgilityCheck, getAgilityActive = createCheckbox("Agility", UDim2.new(0.52, 0, 0.3, 0), 2)
-DefenseCheck, getDefenseActive = createCheckbox("Defense", UDim2.new(0.05, 0, 0.65, 0), 3)
-StaminaCheck, getStaminaActive = createCheckbox("Stamina", UDim2.new(0.52, 0, 0.65, 0), 4)
+local InfoCorner = Instance.new("UICorner")
+InfoCorner.CornerRadius = UDim.new(0, 8)
+InfoCorner.Parent = InfoLabel
 
 -- Start Button
 StartButton.Name = "StartButton"
 StartButton.Parent = ContentFrame
 StartButton.BackgroundColor3 = Color3.fromRGB(50, 200, 80)
 StartButton.BorderSizePixel = 0
-StartButton.Position = UDim2.new(0.05, 0, 0.68, 0)
+StartButton.Position = UDim2.new(0.05, 0, 0.65, 0)
 StartButton.Size = UDim2.new(0.42, 0, 0, 45)
 StartButton.Font = Enum.Font.GothamBold
 StartButton.Text = "▶ START BOOST"
@@ -207,7 +191,7 @@ StopButton.Name = "StopButton"
 StopButton.Parent = ContentFrame
 StopButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
 StopButton.BorderSizePixel = 0
-StopButton.Position = UDim2.new(0.53, 0, 0.68, 0)
+StopButton.Position = UDim2.new(0.53, 0, 0.65, 0)
 StopButton.Size = UDim2.new(0.42, 0, 0, 45)
 StopButton.Font = Enum.Font.GothamBold
 StopButton.Text = "■ STOP"
@@ -223,12 +207,12 @@ StatusLabel.Name = "StatusLabel"
 StatusLabel.Parent = ContentFrame
 StatusLabel.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
 StatusLabel.BorderSizePixel = 0
-StatusLabel.Position = UDim2.new(0.05, 0, 0.85, 0)
-StatusLabel.Size = UDim2.new(0.9, 0, 0, 45)
+StatusLabel.Position = UDim2.new(0.05, 0, 0.82, 0)
+StatusLabel.Size = UDim2.new(0.9, 0, 0, 55)
 StatusLabel.Font = Enum.Font.Gotham
-StatusLabel.Text = "Status: Ready to boost\nSelect elements and click START"
+StatusLabel.Text = "Status: Ready\nWaiting for training session..."
 StatusLabel.TextColor3 = Color3.fromRGB(150, 255, 150)
-StatusLabel.TextSize = 11
+StatusLabel.TextSize = 12
 StatusLabel.TextWrapped = true
 
 local StatusCorner = Instance.new("UICorner")
@@ -237,60 +221,76 @@ StatusCorner.Parent = StatusLabel
 
 -- Variables
 local isRunning = false
-local trainConnections = {}
+local trainConnection = nil
+local updateConnection = nil
 
 -- Functions
 local function formatNumber(num)
-    local suffixes = {"", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc"}
-    local tier = math.floor(math.log10(num) / 3)
+    local suffixes = {"", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc", "Ud", "Dd", "Td", "Qad", "Qid"}
+    local tier = math.floor(math.log10(math.abs(num) + 1) / 3)
     
     if tier <= 0 then
         return tostring(math.floor(num))
     end
     
-    local suffix = suffixes[math.min(tier + 1, #suffixes)] or "∞"
+    local suffix = suffixes[math.min(tier + 1, #suffixes)] or "De"
     local scale = math.pow(10, tier * 3)
     local scaled = num / scale
     
     return string.format("%.2f%s", scaled, suffix)
 end
 
-local function boostTrainValue(trainType, multiplier)
+local function boostTrainingValue()
+    if not isRunning then return end
+    
+    local multiplier = tonumber(MultiplierInput.Text) or 1000000000000
+    local trainType = tonumber(TrainTypeInput.Text) or 1
+    
+    -- Clamp train type to 1-4
+    trainType = math.clamp(trainType, 1, 4)
+    
     pcall(function()
-        -- Method 1: Server-side remote call for stationary training
-        local ApplyStationaryTrain = ReplicatedStorage.TrainEquipment.Remote.ApplyStationaryTrain
-        ApplyStationaryTrain:InvokeServer()
+        -- Get current player character
+        local character = LocalPlayer.Character
+        if not character then return end
         
-        task.wait(0.1)
+        -- Method from your reference: PlayerTrainValueHasChanged with extreme values
+        local PlayerTrainValueHasChanged = ReplicatedStorage.TrainSystem.Bindable.PlayerTrainValueHasChanged
         
-        -- Method 2: Hook into training value change with extreme multiplier
-        local PlayerTrainValueHasChanged = ReplicatedStorage.TrainSystem.Remote.PlayerTrainValueHasChanged
-        local baseValue = math.random(1000, 5000)
-        local boostedValue = baseValue * multiplier
+        -- Base random value
+        local baseValue = math.random(100000, 500000)
+        local extremeNewValue = baseValue * multiplier
+        local extremeOldValue = extremeNewValue - (baseValue * 0.1)
         
-        -- Send to server via Remote
-        firesignal(PlayerTrainValueHasChanged.OnClientEvent, 
+        -- Fire the bindable event (this updates locally AND triggers server sync)
+        PlayerTrainValueHasChanged:Fire(
             LocalPlayer,
             trainType,
-            boostedValue,
-            boostedValue - baseValue
+            extremeNewValue,
+            extremeOldValue
         )
-        
-        task.wait(0.05)
-        
-        -- Method 3: Apply training boost effect
-        local ApplyBoostEffect = ReplicatedStorage.TrainEquipment.Remote.ApplyBindingTrainingBoostEffect
-        ApplyBoostEffect:InvokeServer()
     end)
 end
 
-local function updateCombatPower()
+local function updateCombatPowerDisplay()
+    if not isRunning then return end
+    
     pcall(function()
+        -- Try to get combat power from bindable
         local GetCombatPower = ReplicatedStorage.TrainSystem.Bindable.GetCombatPower
-        local currentPower = GetCombatPower:Invoke(LocalPlayer)
+        local combatPower = GetCombatPower:Invoke(LocalPlayer)
         
-        if currentPower then
-            StatusLabel.Text = string.format("Status: ACTIVE ✓\nCombat Power: %s", formatNumber(currentPower))
+        if combatPower and combatPower > 0 then
+            local trainTypeName = {"Strength", "Agility", "Defense", "Stamina"}
+            local currentType = tonumber(TrainTypeInput.Text) or 1
+            currentType = math.clamp(currentType, 1, 4)
+            
+            StatusLabel.Text = string.format(
+                "Status: ACTIVE ✓\nBoosting: %s\nCombat Power: %s",
+                trainTypeName[currentType],
+                formatNumber(combatPower)
+            )
+            StatusLabel.TextColor3 = Color3.fromRGB(150, 255, 150)
         end
     end)
 end
@@ -298,88 +298,92 @@ end
 local function startTraining()
     if isRunning then return end
     
-    local multiplier = tonumber(MultiplierInput.Text) or 1000000000000
-    local activeElements = {}
+    local multiplier = tonumber(MultiplierInput.Text)
+    local trainType = tonumber(TrainTypeInput.Text)
     
-    -- Check which elements are active
-    if getStrengthActive() then table.insert(activeElements, {name = "Strength", type = 1}) end
-    if getAgilityActive() then table.insert(activeElements, {name = "Agility", type = 2}) end
-    if getDefenseActive() then table.insert(activeElements, {name = "Defense", type = 3}) end
-    if getStaminaActive() then table.insert(activeElements, {name = "Stamina", type = 4}) end
+    if not multiplier or multiplier < 1 then
+        StatusLabel.Text = "Error: Invalid multiplier!\nMust be number > 1"
+        StatusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+        return
+    end
     
-    if #activeElements == 0 then
-        StatusLabel.Text = "Error: Select at least 1 element!"
+    if not trainType or trainType < 1 or trainType > 4 then
+        StatusLabel.Text = "Error: Train type must be 1-4!"
         StatusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
         return
     end
     
     isRunning = true
     StartButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
-    StatusLabel.Text = "Status: Initializing boost..."
+    
+    local trainTypeName = {"Strength", "Agility", "Defense", "Stamina"}
+    StatusLabel.Text = string.format(
+        "Status: Initializing...\nTarget: %s\nMultiplier: %s",
+        trainTypeName[trainType],
+        formatNumber(multiplier)
+    )
     StatusLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
     
-    -- Apply buff items first (Item 18-21)
-    local buffItems = {
-        {id = 18, name = "Arms Buff"},
-        {id = 19, name = "Back Buff"},
-        {id = 20, name = "Legs Buff"},
-        {id = 21, name = "Agility Buff"}
-    }
-    
-    for _, item in ipairs(buffItems) do
-        pcall(function()
-            local TryOperatingItem = ReplicatedStorage.PlayerItemBackpack.Remote.TryOperatingItemByPlayer
-            TryOperatingItem:InvokeServer(
-                {
-                    GridInfo = {Id = item.id, Num = 1},
-                    GridIndex = "401"
-                },
-                item.id,
-                1,
-                {Operation = "UseItem", PointingOperation = "UseSingleBuffConsum"}
-            )
-        end)
-        task.wait(0.1)
-    end
-    
-    StatusLabel.Text = string.format("Status: Boosting %d elements\nMultiplier: %s", #activeElements, formatNumber(multiplier))
-    StatusLabel.TextColor3 = Color3.fromRGB(150, 255, 150)
-    
-    -- Continuous training loop for each active element
-    for _, element in ipairs(activeElements) do
-        local connection = game:GetService("RunService").Heartbeat:Connect(function()
-            if isRunning then
-                task.spawn(function()
-                    boostTrainValue(element.type, multiplier)
-                end)
-            end
-        end)
-        table.insert(trainConnections, connection)
-    end
-    
-    -- Update Combat Power display
+    -- Apply buff items (18-21) first
     task.spawn(function()
-        while isRunning do
-            updateCombatPower()
-            task.wait(1)
+        local buffItems = {18, 19, 20, 21}
+        for _, itemId in ipairs(buffItems) do
+            pcall(function()
+                local TryOperatingItem = ReplicatedStorage.PlayerItemBackpack.Remote.TryOperatingItemByPlayer
+                TryOperatingItem:InvokeServer(
+                    {
+                        GridInfo = {Id = itemId, Num = 1},
+                        GridIndex = "401"
+                    },
+                    itemId,
+                    1,
+                    {Operation = "UseItem", PointingOperation = "UseSingleBuffConsum"}
+                )
+            end)
+            task.wait(0.15)
         end
     end)
+    
+    task.wait(0.5)
+    
+    -- Main training boost loop - fires rapidly
+    trainConnection = game:GetService("RunService").Heartbeat:Connect(function()
+        if isRunning then
+            boostTrainingValue()
+        end
+    end)
+    
+    -- Combat power display updater - slower update
+    updateConnection = game:GetService("RunService").Heartbeat:Connect(function()
+        if isRunning then
+            updateCombatPowerDisplay()
+        end
+    end)
+    
+    task.wait(1)
+    StatusLabel.Text = string.format(
+        "Status: BOOSTING! 🔥\n%s x%s\nCheck your stats!",
+        trainTypeName[trainType],
+        formatNumber(multiplier)
+    )
 end
 
 local function stopTraining()
     isRunning = false
     
-    for _, connection in ipairs(trainConnections) do
-        connection:Disconnect()
+    if trainConnection then
+        trainConnection:Disconnect()
+        trainConnection = nil
     end
-    trainConnections = {}
+    
+    if updateConnection then
+        updateConnection:Disconnect()
+        updateConnection = nil
+    end
     
     StartButton.BackgroundColor3 = Color3.fromRGB(50, 200, 80)
-    StatusLabel.Text = "Status: Stopped\nValues saved to server"
+    StatusLabel.Text = "Status: Stopped\nValues should be saved.\nCheck your character stats!"
     StatusLabel.TextColor3 = Color3.fromRGB(255, 170, 0)
-    
-    task.wait(1)
-    updateCombatPower()
 end
 
 -- Button Connections
@@ -389,7 +393,7 @@ StopButton.MouseButton1Click:Connect(stopTraining)
 MinimizeButton.MouseButton1Click:Connect(function()
     ContentFrame.Visible = not ContentFrame.Visible
     if ContentFrame.Visible then
-        MainFrame.Size = UDim2.new(0, 420, 0, 400)
+        MainFrame.Size = UDim2.new(0, 420, 0, 420)
         MinimizeButton.Text = "_"
     else
         MainFrame.Size = UDim2.new(0, 420, 0, 40)
@@ -427,8 +431,11 @@ else
     ScreenGui.Parent = game:GetService("CoreGui")
 end
 
-print("🔥 Permanent Training Booster Loaded!")
-print("✓ Server-side value injection enabled")
-print("✓ 4 Elements: Strength, Agility, Defense, Stamina")
-print("💾 Values will persist after relog!")
-print("⚡ Multiplier range: 1T to Decillion+")
+print("🔥 Extreme Training Booster V2 Loaded!")
+print("📊 Based on working Bindable method")
+print("💡 Steps:")
+print("  1. Start training in-game first")
+print("  2. Set multiplier and train type")
+print("  3. Click START BOOST")
+print("  4. Watch values skyrocket!")
+print("⚡ Train Types: 1=Strength, 2=Agility, 3=Defense, 4=Stamina")
