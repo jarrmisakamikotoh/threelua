@@ -1,184 +1,331 @@
--- Global Services
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
+-- Extreme Training Value Multiplier Script
+-- Delta Compatible | High Value Accumulation System
+
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LocalPlayer = Players.LocalPlayer
-local PlayerName = LocalPlayer.Name
 
--- *** KONFIGURASI INTI ***
--- Multiplier yang sangat tinggi (10 Triliun)
-local HYPER_MULTIPLIER = 10000000000000 
-local TRAIN_TYPE = 1 -- Default ke Arms
+-- GUI Setup
+local ScreenGui = Instance.new("ScreenGui")
+local MainFrame = Instance.new("Frame")
+local Title = Instance.new("TextLabel")
+local MultiplierLabel = Instance.new("TextLabel")
+local MultiplierInput = Instance.new("TextBox")
+local StartButton = Instance.new("TextButton")
+local StopButton = Instance.new("TextButton")
+local StatusLabel = Instance.new("TextLabel")
+local MinimizeButton = Instance.new("TextButton")
+local CloseButton = Instance.new("TextButton")
+local ContentFrame = Instance.new("Frame")
 
--- Remote Event/Function (Ambil dari log Anda)
-local ApplyStationaryTrain = ReplicatedStorage:FindFirstChild("TrainEquipment"):FindFirstChild("Remote"):FindFirstChild("ApplyStationaryTrain")
-local TrainSpeedRemote = ReplicatedStorage:FindFirstChild("TrainSystem"):FindFirstChild("Remote"):FindFirstChild("TrainSpeedHasChanged")
-local TryOperatingItemByPlayer = ReplicatedStorage:FindFirstChild("PlayerItemBackpack"):FindFirstChild("Remote"):FindFirstChild("TryOperatingItemByPlayer")
+-- GUI Properties
+ScreenGui.Name = "ExtremeTrainingGUI"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
--- Fungsi untuk memastikan Remote ada
-local function isRemoteValid(remote)
-    if not remote then
-        warn("Remote tidak ditemukan!")
-        return false
+-- Main Frame
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+MainFrame.BorderSizePixel = 0
+MainFrame.Position = UDim2.new(0.35, 0, 0.3, 0)
+MainFrame.Size = UDim2.new(0, 400, 0, 300)
+MainFrame.Active = true
+MainFrame.Draggable = true
+
+-- Rounded corners
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 12)
+UICorner.Parent = MainFrame
+
+-- Title Bar
+Title.Name = "Title"
+Title.Parent = MainFrame
+Title.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
+Title.BorderSizePixel = 0
+Title.Size = UDim2.new(1, 0, 0, 40)
+Title.Font = Enum.Font.GothamBold
+Title.Text = "🔥 Extreme Training Booster"
+Title.TextColor3 = Color3.fromRGB(255, 215, 0)
+Title.TextSize = 18
+
+local TitleCorner = Instance.new("UICorner")
+TitleCorner.CornerRadius = UDim.new(0, 12)
+TitleCorner.Parent = Title
+
+-- Minimize Button
+MinimizeButton.Name = "MinimizeButton"
+MinimizeButton.Parent = MainFrame
+MinimizeButton.BackgroundColor3 = Color3.fromRGB(255, 170, 0)
+MinimizeButton.BorderSizePixel = 0
+MinimizeButton.Position = UDim2.new(1, -70, 0, 5)
+MinimizeButton.Size = UDim2.new(0, 30, 0, 30)
+MinimizeButton.Font = Enum.Font.GothamBold
+MinimizeButton.Text = "_"
+MinimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+MinimizeButton.TextSize = 20
+
+local MinCorner = Instance.new("UICorner")
+MinCorner.CornerRadius = UDim.new(0, 8)
+MinCorner.Parent = MinimizeButton
+
+-- Close Button
+CloseButton.Name = "CloseButton"
+CloseButton.Parent = MainFrame
+CloseButton.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
+CloseButton.BorderSizePixel = 0
+CloseButton.Position = UDim2.new(1, -35, 0, 5)
+CloseButton.Size = UDim2.new(0, 30, 0, 30)
+CloseButton.Font = Enum.Font.GothamBold
+CloseButton.Text = "X"
+CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseButton.TextSize = 18
+
+local CloseCorner = Instance.new("UICorner")
+CloseCorner.CornerRadius = UDim.new(0, 8)
+CloseCorner.Parent = CloseButton
+
+-- Content Frame
+ContentFrame.Name = "ContentFrame"
+ContentFrame.Parent = MainFrame
+ContentFrame.BackgroundTransparency = 1
+ContentFrame.Position = UDim2.new(0, 0, 0, 50)
+ContentFrame.Size = UDim2.new(1, 0, 1, -50)
+
+-- Multiplier Label
+MultiplierLabel.Name = "MultiplierLabel"
+MultiplierLabel.Parent = ContentFrame
+MultiplierLabel.BackgroundTransparency = 1
+MultiplierLabel.Position = UDim2.new(0.1, 0, 0.1, 0)
+MultiplierLabel.Size = UDim2.new(0.8, 0, 0, 30)
+MultiplierLabel.Font = Enum.Font.Gotham
+MultiplierLabel.Text = "Training Value Multiplier:"
+MultiplierLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+MultiplierLabel.TextSize = 14
+MultiplierLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+-- Multiplier Input
+MultiplierInput.Name = "MultiplierInput"
+MultiplierInput.Parent = ContentFrame
+MultiplierInput.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
+MultiplierInput.BorderSizePixel = 0
+MultiplierInput.Position = UDim2.new(0.1, 0, 0.25, 0)
+MultiplierInput.Size = UDim2.new(0.8, 0, 0, 35)
+MultiplierInput.Font = Enum.Font.GothamBold
+MultiplierInput.PlaceholderText = "Enter multiplier (e.g., 1e12 for trillion)"
+MultiplierInput.Text = "1000000000000"
+MultiplierInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+MultiplierInput.TextSize = 14
+
+local InputCorner = Instance.new("UICorner")
+InputCorner.CornerRadius = UDim.new(0, 8)
+InputCorner.Parent = MultiplierInput
+
+-- Start Button
+StartButton.Name = "StartButton"
+StartButton.Parent = ContentFrame
+StartButton.BackgroundColor3 = Color3.fromRGB(50, 200, 80)
+StartButton.BorderSizePixel = 0
+StartButton.Position = UDim2.new(0.1, 0, 0.5, 0)
+StartButton.Size = UDim2.new(0.35, 0, 0, 40)
+StartButton.Font = Enum.Font.GothamBold
+StartButton.Text = "▶ START"
+StartButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+StartButton.TextSize = 16
+
+local StartCorner = Instance.new("UICorner")
+StartCorner.CornerRadius = UDim.new(0, 10)
+StartCorner.Parent = StartButton
+
+-- Stop Button
+StopButton.Name = "StopButton"
+StopButton.Parent = ContentFrame
+StopButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+StopButton.BorderSizePixel = 0
+StopButton.Position = UDim2.new(0.55, 0, 0.5, 0)
+StopButton.Size = UDim2.new(0.35, 0, 0, 40)
+StopButton.Font = Enum.Font.GothamBold
+StopButton.Text = "■ STOP"
+StopButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+StopButton.TextSize = 16
+
+local StopCorner = Instance.new("UICorner")
+StopCorner.CornerRadius = UDim.new(0, 10)
+StopCorner.Parent = StopButton
+
+-- Status Label
+StatusLabel.Name = "StatusLabel"
+StatusLabel.Parent = ContentFrame
+StatusLabel.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
+StatusLabel.BorderSizePixel = 0
+StatusLabel.Position = UDim2.new(0.1, 0, 0.75, 0)
+StatusLabel.Size = UDim2.new(0.8, 0, 0, 50)
+StatusLabel.Font = Enum.Font.Gotham
+StatusLabel.Text = "Status: Ready\nCombat Power: Waiting..."
+StatusLabel.TextColor3 = Color3.fromRGB(150, 255, 150)
+StatusLabel.TextSize = 12
+StatusLabel.TextWrapped = true
+
+local StatusCorner = Instance.new("UICorner")
+StatusCorner.CornerRadius = UDim.new(0, 8)
+StatusCorner.Parent = StatusLabel
+
+-- Variables
+local isRunning = false
+local originalTrainValue = 0
+local connectionLoop = nil
+
+-- Functions
+local function formatNumber(num)
+    local suffixes = {"", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc", "Ud", "Dd", "Td", "Qad", "Qid", "Sxd", "Spd", "Ocd", "Nod", "Vg", "Uvg"}
+    local tier = math.floor(math.log10(num) / 3)
+    
+    if tier <= 0 then
+        return tostring(math.floor(num))
     end
-    return true
+    
+    local suffix = suffixes[math.min(tier + 1, #suffixes)] or "∞"
+    local scale = math.pow(10, tier * 3)
+    local scaled = num / scale
+    
+    return string.format("%.2f%s", scaled, suffix)
 end
 
--- =========================================================================
---                                 FUNGSI UTAMA TRAIN HACK REVISI
--- =========================================================================
-
-local function executeHyperTrain(trainType)
-    if not isRemoteValid(TrainSpeedRemote) then
-        print("Gagal: Remote TrainSpeedHasChanged tidak tersedia.")
-        return
+local function applyExtremeMultiplier()
+    if not isRunning then return end
+    
+    local multiplier = tonumber(MultiplierInput.Text) or 1000000000000
+    
+    -- Apply buff items with extreme values
+    local buffItems = {
+        {id = 18, buffType = "1"}, -- Arms
+        {id = 19, buffType = "2"}, -- Back  
+        {id = 20, buffType = "3"}, -- Legs
+        {id = 21, buffType = "4"}  -- Agility
+    }
+    
+    for _, item in ipairs(buffItems) do
+        pcall(function()
+            local TryOperatingItem = ReplicatedStorage.PlayerItemBackpack.Remote.TryOperatingItemByPlayer
+            TryOperatingItem:InvokeServer(
+                {
+                    GridInfo = {Id = item.id, Num = 1},
+                    GridIndex = "401"
+                },
+                item.id,
+                1,
+                {Operation = "UseItem", PointingOperation = "UseSingleBuffConsum"}
+            )
+        end)
+        task.wait(0.1)
     end
-
-    -- STRATEGI 1: MENGGANTI NILAI TRAIN SPEED DENGAN MULTIPLIER TINGGI
-    -- Kita asumsikan bahwa nilai yang dikirim ke TrainSpeedHasChanged adalah *peningkatan* speed/multiplier.
     
-    local originalValue = TrainSpeedRemote:InvokeServer() -- Coba dapatkan nilai original jika itu RemoteFunction
-    local boostValue = originalValue or 4 -- Jika gagal, gunakan nilai default (4)
-
-    -- Kirim nilai yang sangat tinggi sebagai speed.
-    local finalSpeed = HYPER_MULTIPLIER 
-    
-    print(string.format("Mengirim Hyper Train Speed sebesar %s (Tipe: %d)...", tostring(finalSpeed), trainType))
-    
-    -- TRAIN SPEED HANYA MENERIMA 1 ARGUMEN (dilihat dari log: TrainSpeedHasChanged:FireServer(4))
-    -- Kita harus memanggil *ApplyStationaryTrain* agar train benar-benar aktif di server.
-    
-    if ApplyStationaryTrain and ApplyStationaryTrain.ClassName == "RemoteFunction" then
-        print("Memanggil ApplyStationaryTrain...")
-        ApplyStationaryTrain:InvokeServer()
-    end
-    
-    if TrainSpeedRemote and TrainSpeedRemote.ClassName == "UnreliableRemoteEvent" then
-        -- Panggil TrainSpeedRemote setelah train dipicu
-        TrainSpeedRemote:FireServer(finalSpeed)
+    -- Apply extreme training values
+    pcall(function()
+        local PlayerTrainValueHasChanged = ReplicatedStorage.TrainSystem.Bindable.PlayerTrainValueHasChanged
+        local extremeValue = multiplier * 1000000
         
-        -- Panggil sekali lagi ApplyStationaryTrain untuk me-refresh
-        if ApplyStationaryTrain and ApplyStationaryTrain.ClassName == "RemoteFunction" then
-            ApplyStationaryTrain:InvokeServer()
+        PlayerTrainValueHasChanged:Fire(
+            LocalPlayer,
+            1,
+            extremeValue,
+            extremeValue - 1000
+        )
+    end)
+    
+    -- Update Combat Power with extreme value
+    task.wait(0.2)
+    pcall(function()
+        local PlayerCombatPowerHasChanged = ReplicatedStorage.TrainSystem.Remote.PlayerCombatPowerHasChanged
+        local extremeCombatPower = multiplier * 5000000
+        
+        firesignal(PlayerCombatPowerHasChanged.OnClientEvent, LocalPlayer, extremeCombatPower)
+        
+        StatusLabel.Text = string.format("Status: ACTIVE ✓\nCombat Power: %s", formatNumber(extremeCombatPower))
+    end)
+end
+
+local function startTraining()
+    if isRunning then return end
+    
+    isRunning = true
+    StartButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+    StatusLabel.Text = "Status: Starting extreme training..."
+    StatusLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
+    
+    -- Initial application
+    applyExtremeMultiplier()
+    
+    -- Continuous loop
+    connectionLoop = game:GetService("RunService").Heartbeat:Connect(function()
+        if isRunning then
+            task.spawn(applyExtremeMultiplier)
         end
-        
-        print("Pengiriman Hyper Train Selesai. Periksa Combat Power!")
-    else
-        warn("Remote TrainSpeedRemote tidak valid atau bukan RemoteEvent/Function yang tepat.")
-    end
-
+    end)
+    
+    task.wait(1)
+    StatusLabel.TextColor3 = Color3.fromRGB(150, 255, 150)
 end
 
--- =========================================================================
---                             FUNGSI BUFF HACK REVISI
--- =========================================================================
-
-local function useBuffItem(itemId, gridIndex)
-    if not isRemoteValid(TryOperatingItemByPlayer) then
-        print("Gagal: Remote TryOperatingItemByPlayer tidak tersedia.")
-        return
+local function stopTraining()
+    isRunning = false
+    
+    if connectionLoop then
+        connectionLoop:Disconnect()
+        connectionLoop = nil
     end
-
-    -- Manipulasi Item Num ke nilai yang sangat besar
-    local HYPER_ITEM_COUNT = 999999999 
-
-    local itemData = {
-        GridInfo = {
-            Id = itemId,
-            Num = HYPER_ITEM_COUNT -- Injeksi nilai besar di sini
-        },
-        GridIndex = gridIndex
-    }
-    local operationData = {
-        Operation = "UseItem",
-        PointingOperation = "UseSingleBuffConsum"
-    }
     
-    print(string.format("Mengaktifkan Item %d (Grid: %s) dengan jumlah %s...", itemId, gridIndex, tostring(HYPER_ITEM_COUNT)))
-    
-    -- Memanggil remote dengan jumlah item yang dimanipulasi
-    local success = TryOperatingItemByPlayer:InvokeServer(
-        itemData,
-        itemId,
-        HYPER_ITEM_COUNT, 
-        operationData
-    )
-    
-    if success == nil then
-        print(string.format("Item %d Buff Berhasil Diaktifkan (Potensi Durasi/Efek x%s)!", itemId, tostring(HYPER_ITEM_COUNT)))
-    else
-        print(string.format("Item %d Buff Gagal/Balasan Server: %s", itemId, tostring(success)))
-    end
+    StartButton.BackgroundColor3 = Color3.fromRGB(50, 200, 80)
+    StatusLabel.Text = "Status: Stopped\nCombat Power: Check in-game"
+    StatusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
 end
 
--- =========================================================================
---                                      GUI (Menggunakan Library Umum)
--- =========================================================================
+-- Button Connections
+StartButton.MouseButton1Click:Connect(startTraining)
+StopButton.MouseButton1Click:Connect(stopTraining)
 
--- Implementasi GUI sederhana (menggunakan loadstring yang umum di Delta)
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/wally-rblx/Linoria/main/Library.lua"))()
-
-local Window = Library:CreateWindow("Delta Combat Power V2")
-
--- Tab Train Multiplier
-local TrainTab = Window:AddTab("Hyper Train")
-local TrainSection = TrainTab:AddSection("Hyper Training (Trillions CP)")
-
-TrainSection:AddSlider("Multiplier Value", {
-    Min = 1e12, 
-    Max = 1e18, 
-    Default = HYPER_MULTIPLIER,
-    Decimals = 0,
-    Text = "Value: " .. tostring(HYPER_MULTIPLIER),
-    Callback = function(value)
-        HYPER_MULTIPLIER = value
+MinimizeButton.MouseButton1Click:Connect(function()
+    ContentFrame.Visible = not ContentFrame.Visible
+    if ContentFrame.Visible then
+        MainFrame.Size = UDim2.new(0, 400, 0, 300)
+        MinimizeButton.Text = "_"
+    else
+        MainFrame.Size = UDim2.new(0, 400, 0, 40)
+        MinimizeButton.Text = "□"
     end
-})
-
--- Kita tidak perlu memilih tipe train karena kita memanipulasi Train Speed/Multiplier Global
-TrainSection:AddLabel("⚠️ Pilih alat train yang ingin ditingkatkan di game, lalu klik tombol di bawah ini.")
-
-TrainSection:AddButton("🚀 AKTIFKAN HYPER SPEED TRAIN", function()
-    -- Asumsi TrainType 1 selalu berlaku untuk Train Speed, atau server mengambil TrainType aktif.
-    executeHyperTrain(TRAIN_TYPE) 
 end)
 
--- ---
--- Tab Buff Multiplier (Item Buff)
-local BuffTab = Window:AddTab("Item Buff")
-local BuffSection = BuffTab:AddSection("Instant Buff x999999999")
-
-BuffSection:AddLabel("Masukkan Grid Index item Anda (mis: 401, 407).")
-
-BuffSection:AddButton("🧪 Item18 (Arms Buff)", function()
-    -- Cek Grid Index yang benar di Backpack Anda
-    local grid = "401" -- Ganti jika perlu
-    useBuffItem(18, grid)
+CloseButton.MouseButton1Click:Connect(function()
+    stopTraining()
+    ScreenGui:Destroy()
 end)
 
-BuffSection:AddButton("🧪 Item20 (Legs Buff)", function()
-    local grid = "407" -- Ganti jika perlu
-    useBuffItem(20, grid)
-end)
+-- Add hover effects
+local function addHoverEffect(button, normalColor, hoverColor)
+    button.MouseEnter:Connect(function()
+        button.BackgroundColor3 = hoverColor
+    end)
+    button.MouseLeave:Connect(function()
+        button.BackgroundColor3 = normalColor
+    end)
+end
 
-BuffSection:AddButton("🧪 Item19 (Back Buff)", function()
-    local grid = "402" -- Ganti jika perlu
-    useBuffItem(19, grid)
-end)
+addHoverEffect(StartButton, Color3.fromRGB(50, 200, 80), Color3.fromRGB(70, 220, 100))
+addHoverEffect(StopButton, Color3.fromRGB(200, 50, 50), Color3.fromRGB(220, 70, 70))
+addHoverEffect(MinimizeButton, Color3.fromRGB(255, 170, 0), Color3.fromRGB(255, 190, 50))
+addHoverEffect(CloseButton, Color3.fromRGB(220, 50, 50), Color3.fromRGB(240, 70, 70))
 
-BuffSection:AddButton("🧪 Item21 (Agility Buff)", function()
-    local grid = "401" -- Ganti jika perlu
-    useBuffItem(21, grid)
-end)
+-- Parent to CoreGui for protection
+if gethui then
+    ScreenGui.Parent = gethui()
+elseif syn and syn.protect_gui then
+    syn.protect_gui(ScreenGui)
+    ScreenGui.Parent = game:GetService("CoreGui")
+else
+    ScreenGui.Parent = game:GetService("CoreGui")
+end
 
--- ---
--- Tab Utilities (Minimize/Close)
-local UtilityTab = Window:AddTab("Utilities")
-local UtilitySection = UtilityTab:AddSection("GUI Controls")
-
-UtilitySection:AddButton("⏏️ Minimize GUI", function()
-    Window:Minimize()
-end)
-
-UtilitySection:AddButton("❌ Close GUI", function()
-    Library:Unload()
-end)
+print("🔥 Extreme Training Booster Loaded!")
+print("📊 Default Multiplier: 1 Trillion (1e12)")
+print("⚡ Enter higher values for Quadrillion, Quintillion, or even Decillion!")
+print("💪 Combat Power will scale automatically")
